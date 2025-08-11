@@ -10,6 +10,7 @@ public class UI_Match_Block : MonoBehaviour
     public Vector2 GetPos() => _rt.anchoredPosition;
     public MoveContoller GetMoveController() => _movecontroller;
     ETYPE _types;
+    public ETYPE GetBlockTypes() => _types;
 
     public static event Action<UI_Match_Block> _matchevent;
 
