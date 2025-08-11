@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 8118859202639291038}
   - component: {fileID: 3918472198498048170}
   - component: {fileID: 3668103707140489523}
+  - component: {fileID: 3222959407069638438}
   m_Layer: 5
   m_Name: UI_Match_Block
   m_TagString: Untagged
@@ -89,6 +90,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30d761cf96a21424b891ab1335b7790c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _image: {fileID: 8118859202639291038}
+  _movecontroller: {fileID: 3222959407069638438}
+  _rt: {fileID: 4548716164120518513}
 --- !u!114 &3668103707140489523
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -106,3 +110,16 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls: []
+--- !u!114 &3222959407069638438
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1105551765456172482}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 391c7bd17dbd34724b23aeafd1d3111b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveTime: 0.25
