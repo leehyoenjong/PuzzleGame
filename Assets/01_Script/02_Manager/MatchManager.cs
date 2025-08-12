@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using Unity.Burst.Intrinsics;
 using UnityEngine;
 
 public class MatchManager : MonoBehaviour
@@ -151,18 +152,26 @@ public class MatchManager : MonoBehaviour
         await UniTask.WaitForSeconds(0.5f, cancellationToken: this.GetCancellationTokenOnDestroy());
 
         var matchresult = GetMatchBlock(downpoint.x, downpoint.y, width, height, matchblockdic, true);
+        var downpointcheck = matchresult.matchblocklist_x.Count >= 3 || matchresult.matchblocklist_y.Count >= 3;
         //매치 성공
-        if (matchresult.matchblocklist_x.Count >= 3 || matchresult.matchblocklist_y.Count >= 3)
+        if (downpointcheck)
         {
             //매칭 성공하면 위치는 고정하고 매칭 성공 처리 진행
             MatchComplte(matchresult.matchblocklist_x, matchresult.matchblocklist_y);
         }
 
-        matchresult = GetMatchBlock(enterpoint.x, enterpoint.y, width, height, matchblockdic, true);
-        if (matchresult.matchblocklist_x.Count >= 3 || matchresult.matchblocklist_y.Count >= 3)
+        var matchresult_enter = GetMatchBlock(enterpoint.x, enterpoint.y, width, height, matchblockdic, true);
+        var entercheck = matchresult_enter.matchblocklist_x.Count >= 3 || matchresult_enter.matchblocklist_y.Count >= 3;
+        if (entercheck)
         {
             //매칭 성공하면 위치는 고정하고 매칭 성공 처리 진행
-            MatchComplte(matchresult.matchblocklist_x, matchresult.matchblocklist_y);
+            MatchComplte(matchresult_enter.matchblocklist_x, matchresult_enter.matchblocklist_y);
+        }
+
+        //매칭 성공 시 원상복구 막기 
+        if (downpointcheck || entercheck)
+        {
+            return;
         }
 
         //매칭 실패 시 원상복구

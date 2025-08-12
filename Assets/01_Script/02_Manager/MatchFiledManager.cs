@@ -173,7 +173,7 @@ public class MatchFiledManager : MonoBehaviour
 
                 //blocklist가 y값이 낮은 순으로 되어 있기 때문에 x값만 체크하여 아래로 이동
                 var block = blocklist.Find(x => x.GetPos().x == targetpos.x);
-                block.GetMoveController().MoveTo(targetpos);
+                block.ChangePoint(x, y, targetpos);
 
                 if (_matchblockdic.ContainsKey(key) == false)
                 {
