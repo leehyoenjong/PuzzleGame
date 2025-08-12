@@ -18,6 +18,7 @@ public class MatchFiledManager : MonoBehaviour
     Dictionary<(int x, int y), UI_Match_Block> _matchblockdic = new Dictionary<(int, int), UI_Match_Block>();
 
     public static event Action<Dictionary<(int, int), UI_Match_Block>, int, int> _match_complte_event;//매치 성공 이벤트 
+    public static event Func<Dictionary<(int, int), UI_Match_Block>, int, int, bool> _matchsimuration_check_event;//매치 시뮬레이션 체크 이벤트
     public static event Action<Dictionary<(int, int), UI_Match_Block>, UI_Match_Block, UI_Match_Block, int, int> _block_move_event;//이동 진행시 이벤트
 
     public static event Func<bool> _match_setting_check_event;//블록 생성, 이동와 같은 것들을 진행해도 되는지 체크하는 이벤트
@@ -65,14 +66,18 @@ public class MatchFiledManager : MonoBehaviour
         //모든 기능이 다 종료되었을때 진행
         await UniTask.WaitUntil(() => (bool)_match_setting_check_event?.Invoke() == false);
 
-        //먼저 기존에 남아있던 블록 아래로 이동 
+        //새롭게 생성해야할 블록이 있는지 체크
         var blockList = _matchblockdic.Values.Where(x => x != null).ToList();
         if (blockList.Count == Width * Height)
         {
+            //매치 가능한 블록이 있는지 체크
+            var checksimurationmatchblock = (bool)_matchsimuration_check_event?.Invoke(_matchblockdic, Width, Height);
+
             _issetting = false;
             return;
         }
 
+        //먼저 기존에 남아있던 블록 아래로 이동 
         await MoveMatchBlock(blockList);
 
         //이동 후 빈칸에 맞춰 블록 생성 진행

@@ -77,7 +77,7 @@ public class MoveContoller : MonoBehaviour
     /// <summary>
     /// 위치 설정 (Rigidbody2D 고려)
     /// </summary>
-    void SetPosition(Vector2 position)
+    public void SetPosition(Vector2 position)
     {
         cachedTransform.anchoredPosition = position;
     }

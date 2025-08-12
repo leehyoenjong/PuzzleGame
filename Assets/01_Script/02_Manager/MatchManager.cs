@@ -20,6 +20,7 @@ public class MatchManager : MonoBehaviour
         MatchFiledManager._match_complte_event += AllBlockMatch;
         MatchFiledManager._block_move_event += BlockMatch;
         MatchFiledManager._match_setting_check_event += CheckMatching;
+        MatchFiledManager._matchsimuration_check_event += SimulationBlockMatch;
     }
 
     void OnDisable()
@@ -27,6 +28,7 @@ public class MatchManager : MonoBehaviour
         MatchFiledManager._match_complte_event -= AllBlockMatch;
         MatchFiledManager._block_move_event -= BlockMatch;
         MatchFiledManager._match_setting_check_event -= CheckMatching;
+        MatchFiledManager._matchsimuration_check_event -= SimulationBlockMatch;
     }
 
     void MatchComplte(List<UI_Match_Block> x_list, List<UI_Match_Block> y_list)
@@ -188,6 +190,63 @@ public class MatchManager : MonoBehaviour
         pointdown.ChangePoint(downpoint.x, downpoint.y, downpos);
         pointenter.ChangePoint(enterpoint.x, enterpoint.y, enterpos);
         _ismatching = false;
+    }
+
+    bool SimulationBlockMatch(Dictionary<(int, int), UI_Match_Block> matchblockdic, int width, int height)
+    {
+        _ismatching = true;
+        (int x, int y)[] simurationkeylist = new (int x, int y)[4];
+        simurationkeylist[0] = (0, -1);//상
+        simurationkeylist[1] = (0, 1);//하
+        simurationkeylist[2] = (-1, 0);//좌
+        simurationkeylist[3] = (1, 0);//우
+
+        //블록이 아닌 슬롯의 정보를 저장하여 위치값 계산할 예정
+        var maxcount = matchblockdic.Count;
+        var simurationcount = simurationkeylist.Length;
+        int key_y = 0;
+        int key_x = 0;
+
+        for (int i = 0; i < maxcount; i++)
+        {
+            for (int point = 0; point < simurationcount; point++)
+            {
+                var origin = matchblockdic[(key_x, key_y)];
+
+                var nextkeyx = key_x + simurationkeylist[i].x;
+                var nextkeyy = key_y + simurationkeylist[i].y;
+                if (matchblockdic.TryGetValue((nextkeyx, nextkeyy), out var nextblock) == false)
+                {
+                    continue;
+                }
+
+                //시뮬레이션 이동
+                origin.Swap(nextblock, true);
+                var matchresult = GetMatchBlock(key_x, key_y, width, height, matchblockdic);
+
+                //다시 원상복구
+                origin.Swap(nextblock, true);
+
+                //매치 성공
+                if (matchresult.matchblocklist_x.Count >= 3 || matchresult.matchblocklist_y.Count >= 3)
+                {
+                    _ismatching = false;
+                    return true;
+                }
+                //실패시 반복
+            }
+            //매치 실패 시 다음 칸으로 이동
+            key_x++;
+            //크기만큼 도달했다면 다 확인한 것이기 때문에 y값을 증가시키고 x값 초기화
+            if (key_x >= width)
+            {
+                key_x = 0;
+                key_y++;
+            }
+        }
+
+        _ismatching = false;
+        return false;
     }
 
     (List<UI_Match_Block> matchblocklist_x, List<UI_Match_Block> matchblocklist_y) GetMatchBlock(int key_x, int key_y, int width, int height, Dictionary<(int, int), UI_Match_Block> matchblockdic, bool isall = false)

@@ -55,15 +55,23 @@ public class UI_Match_Block : MonoBehaviour
         _y = -1;
     }
 
-    public void ChangePoint(int x, int y, Vector2 movepoint)
+    public void ChangePoint(int x, int y, Vector2 movepoint, bool isdirectmove = false)
     {
         _move_block_event?.Invoke(x, y, this);
         _x = x;
         _y = y;
-        _movecontroller.MoveTo(movepoint);
+
+        if (isdirectmove)
+        {
+            _movecontroller.SetPosition(movepoint);
+        }
+        else
+        {
+            _movecontroller.MoveTo(movepoint);
+        }
     }
 
-    public void Swap(UI_Match_Block swapblock)
+    public void Swap(UI_Match_Block swapblock, bool isdirectmove = false)
     {
         var originx = _x;
         var originy = _y;
@@ -75,8 +83,8 @@ public class UI_Match_Block : MonoBehaviour
         ResetPoint();
         swapblock.ResetPoint();
 
-        ChangePoint(swappoint.x, swappoint.y, swappos);
-        swapblock.ChangePoint(originx, originy, originpos);
+        ChangePoint(swappoint.x, swappoint.y, swappos, isdirectmove);
+        swapblock.ChangePoint(originx, originy, originpos, isdirectmove);
     }
 
     public void Event_Point_Down()
