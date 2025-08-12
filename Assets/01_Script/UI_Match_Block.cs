@@ -16,10 +16,16 @@ public class UI_Match_Block : MonoBehaviour
     public MoveContoller GetMoveController() => _movecontroller;
 
     //타입
-    EBLOCKCOLORTYPE _colortypes;
+    [SerializeField] EBLOCKCOLORTYPE _colortypes;
     public EBLOCKCOLORTYPE GetBlockColorTypes() => _colortypes;
 
-    int _x, _y;
+    public static event Action<int, int, UI_Match_Block> _move_block_event;
+    public static event Action<UI_Match_Block> _point_down_event;
+    public static event Action<UI_Match_Block> _point_enter_event;
+    public static event Action _point_up_event;
+
+
+    [SerializeField] int _x, _y;
     public (int x, int y) GetPoint() => (_x, _y);
 
     void OnEnable()
@@ -36,7 +42,6 @@ public class UI_Match_Block : MonoBehaviour
     {
         _x = x;
         _y = y;
-
         _rt.anchoredPosition = createpos;
 
         var ran = UnityEngine.Random.Range(0, (int)EBLOCKCOLORTYPE.MAX);
@@ -44,9 +49,27 @@ public class UI_Match_Block : MonoBehaviour
         _image.color = GetColor();
     }
 
+    public void ChangePoint(int x, int y, Vector2 movepoint)
+    {
+        _x = x;
+        _y = y;
+        _movecontroller.MoveTo(movepoint);
+        _move_block_event?.Invoke(x, y, this);
+    }
+
+    public void Event_Point_Down()
+    {
+        _point_down_event?.Invoke(this);
+    }
+
+    public void Event_Point_Up()
+    {
+        _point_up_event?.Invoke();
+    }
+
     public void Event_Point_Enter()
     {
-
+        _point_enter_event?.Invoke(this);
     }
 
     void ComplteMatch(int x, int y)

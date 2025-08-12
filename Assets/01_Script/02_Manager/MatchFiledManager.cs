@@ -16,18 +16,22 @@ public class MatchFiledManager : MonoBehaviour
     Dictionary<(int x, int y), UI_Match_Slot> _matchslotdic = new Dictionary<(int, int), UI_Match_Slot>();
     Dictionary<(int x, int y), UI_Match_Block> _matchblockdic = new Dictionary<(int, int), UI_Match_Block>();
 
-    public static event Action<List<UI_Match_Block>, List<UI_Match_Block>> _match_complte_event;//매치 성공 이벤트 
-
+    public static event Action<Dictionary<(int, int), UI_Match_Block>, int, int> _match_complte_event;//매치 성공 이벤트 
+    public static event Action<Dictionary<(int, int), UI_Match_Block>, UI_Match_Block, UI_Match_Block, int, int> _block_move_event;//이동 진행시 이벤트
     float _slotsize;//슬롯 사이즈 캐싱
 
     void OnEnable()
     {
         MatchManager._match_complte_createblock_event += CreateMatchBlock;
+        BlockControllerManager._move_block_event += WaitAndMove;
+        UI_Match_Block._move_block_event += ChangeIDX;
     }
 
     void OnDisable()
     {
         MatchManager._match_complte_createblock_event -= CreateMatchBlock;
+        BlockControllerManager._move_block_event -= WaitAndMove;
+        UI_Match_Block._move_block_event -= ChangeIDX;
     }
 
     void Start()
@@ -41,9 +45,7 @@ public class MatchFiledManager : MonoBehaviour
         CreateMatchSlot();
         var createblocklist = CreateMatchBlock();
         await MoveMatchBlock(createblocklist);
-
-        await UniTask.WaitForSeconds(0.5f, cancellationToken: this.GetCancellationTokenOnDestroy());
-        AllBlockMatch();
+        WaitAndMove();
     }
 
     void SettingSlotSize()
@@ -138,6 +140,19 @@ public class MatchFiledManager : MonoBehaviour
         _matchblockdic[(x, y)] = block;
     }
 
+    //전체 이동
+    async void WaitAndMove()
+    {
+        await UniTask.WaitForSeconds(0.5f, cancellationToken: this.GetCancellationTokenOnDestroy());
+        _match_complte_event?.Invoke(_matchblockdic, Width, Height);
+    }
+
+    //개별 이동
+    void WaitAndMove(UI_Match_Block pointdownblock, UI_Match_Block enterblock)
+    {
+        _block_move_event?.Invoke(_matchblockdic, pointdownblock, enterblock, Width, Height);
+    }
+
     async UniTask<bool> MoveMatchBlock(List<UI_Match_Block> blocklist)
     {
         //y값이 낮은 순으로 정렬
@@ -175,117 +190,8 @@ public class MatchFiledManager : MonoBehaviour
         return true;
     }
 
-    void AllBlockMatch()
+    void ChangeIDX(int x, int y, UI_Match_Block block)
     {
-        //블록이 아닌 슬롯의 정보를 저장하여 위치값 계산할 예정
-        var matchblocklist_x = new List<UI_Match_Block>();
-        var matchblocklist_y = new List<UI_Match_Block>();
-
-        var maxcount = _matchblockdic.Count;
-
-        int key_y = 0;
-        int key_x = 0;
-
-        for (int i = 0; i < maxcount; i++)
-        {
-            matchblocklist_x.Clear();
-            matchblocklist_y.Clear();
-            
-            for (int x = key_x; x < Width; x++)
-            {
-                //더 옆으로 갈 곳이 없기 때문에 종료
-                var nextkey = (x + 1, key_y);
-                if (nextkey.Item1 >= Width)
-                {
-                    break;
-                }
-
-                var key = (x, key_y);
-                if (_matchblockdic[key] == null || _matchblockdic[nextkey] == null)
-                {
-                    continue;
-                }
-
-                var types = _matchblockdic[key].GetBlockColorTypes();
-                var nexttypes = _matchblockdic[nextkey].GetBlockColorTypes();
-
-                //타입이 맞지 않으면 더 확인할 필요 없기 때문에 종료
-                if (types != nexttypes)
-                {
-                    break;
-                }
-
-                //매칭 되었기 때문에 저장
-                if (matchblocklist_x.Contains(_matchblockdic[key]) == false)
-                {
-                    matchblocklist_x.Add(_matchblockdic[key]);
-                }
-                if (matchblocklist_x.Contains(_matchblockdic[nextkey]) == false)
-                {
-                    matchblocklist_x.Add(_matchblockdic[nextkey]);
-                }
-            }
-
-            for (int y = key_y; y < Height; y++)
-            {
-                //더 옆으로 갈 곳이 없기 때문에 종료
-                var nextkey = (key_x, y + 1);
-                if (nextkey.Item2 >= Height)
-                {
-                    break;
-                }
-
-                var key = (key_x, y);
-                if (_matchblockdic[key] == null || _matchblockdic[nextkey] == null)
-                {
-                    continue;
-                }
-
-                var types = _matchblockdic[key].GetBlockColorTypes();
-                var nexttypes = _matchblockdic[nextkey].GetBlockColorTypes();
-
-                //타입이 맞지 않으면 더 확인할 필요 없기 때문에 종료
-                if (types != nexttypes)
-                {
-                    break;
-                }
-
-                //타입이 맞다면 
-                if (matchblocklist_y.Contains(_matchblockdic[key]) == false)
-                {
-                    matchblocklist_y.Add(_matchblockdic[key]);
-                }
-                if (matchblocklist_y.Contains(_matchblockdic[nextkey]) == false)
-                {
-                    matchblocklist_y.Add(_matchblockdic[nextkey]);
-                }
-            }
-
-            //3개 이상이 아니면 매치가 되지 않은 것이기 때문에 Clear
-            if (matchblocklist_x.Count <= 0)
-            {
-                matchblocklist_x.Clear();
-            }
-            if (matchblocklist_y.Count <= 0)
-            {
-                matchblocklist_y.Clear();
-            }
-
-            //매치 성공
-            if (matchblocklist_x.Count >= 3 || matchblocklist_y.Count >= 3)
-            {
-                _match_complte_event?.Invoke(matchblocklist_x, matchblocklist_y);
-                //매치를 성공하고도 return하지 않는 이유는 모든 블록 매치를 체크해야하기 때문
-            }
-
-            //매치 실패 시 다음 칸으로 이동
-            key_x++;
-            //크기만큼 도달했다면 다 확인한 것이기 때문에 y값을 증가시키고 x값 초기화
-            if (key_x >= Width)
-            {
-                key_x = 0;
-                key_y++;
-            }
-        }
+        _matchblockdic[(x, y)] = block;
     }
 }
