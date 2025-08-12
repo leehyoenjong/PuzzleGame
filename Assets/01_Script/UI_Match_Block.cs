@@ -19,6 +19,7 @@ public class UI_Match_Block : MonoBehaviour
     [SerializeField] EBLOCKCOLORTYPE _colortypes;
     public EBLOCKCOLORTYPE GetBlockColorTypes() => _colortypes;
 
+    public static event Action<int, int> _mathcomplte_event;
     public static event Action<int, int, UI_Match_Block> _move_block_event;
     public static event Action<UI_Match_Block> _point_down_event;
     public static event Action<UI_Match_Block> _point_enter_event;
@@ -38,10 +39,9 @@ public class UI_Match_Block : MonoBehaviour
         MatchManager._match_complte_block_event -= ComplteMatch;
     }
 
-    public void Setting(int x, int y, Vector2 createpos)
+    public void Setting(Vector2 createpos)
     {
-        _x = x;
-        _y = y;
+        ResetPoint();
         _rt.anchoredPosition = createpos;
 
         var ran = UnityEngine.Random.Range(0, (int)EBLOCKCOLORTYPE.MAX);
@@ -49,12 +49,34 @@ public class UI_Match_Block : MonoBehaviour
         _image.color = GetColor();
     }
 
+    public void ResetPoint()
+    {
+        _x = -1;
+        _y = -1;
+    }
+
     public void ChangePoint(int x, int y, Vector2 movepoint)
     {
+        _move_block_event?.Invoke(x, y, this);
         _x = x;
         _y = y;
         _movecontroller.MoveTo(movepoint);
-        _move_block_event?.Invoke(x, y, this);
+    }
+
+    public void Swap(UI_Match_Block swapblock)
+    {
+        var originx = _x;
+        var originy = _y;
+        var originpos = GetPos();
+
+        var swappoint = swapblock.GetPoint();
+        var swappos = swapblock.GetPos();
+
+        ResetPoint();
+        swapblock.ResetPoint();
+
+        ChangePoint(swappoint.x, swappoint.y, swappos);
+        swapblock.ChangePoint(originx, originy, originpos);
     }
 
     public void Event_Point_Down()
@@ -80,6 +102,7 @@ public class UI_Match_Block : MonoBehaviour
         }
 
         Destroy(this.gameObject);
+        _mathcomplte_event?.Invoke(x, y);
     }
 
     Color GetColor()

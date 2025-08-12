@@ -7,6 +7,7 @@ public class BlockControllerManager : MonoBehaviour
     UI_Match_Block _point_down_block;
 
     public static event Action<UI_Match_Block, UI_Match_Block> _move_block_event;
+    public static event Func<bool> _block_controller_check_event;//블록을 조정해도 되는지 확인하는 이벤트ㄴ
 
     void OnEnable()
     {
@@ -24,6 +25,11 @@ public class BlockControllerManager : MonoBehaviour
 
     void PointDown(UI_Match_Block block)
     {
+        if ((bool)_block_controller_check_event?.Invoke() == true)
+        {
+            return;
+        }
+
         _point_down_block = block;
     }
 

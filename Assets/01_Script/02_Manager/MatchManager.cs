@@ -9,17 +9,24 @@ public class MatchManager : MonoBehaviour
 {
     public static event Action<int, int, EMATCHTYPE> _match_complte_createblock_event;//매치 성공 후 생성되는 개별 블록 이벤트 
     public static event Action<int, int> _match_complte_block_event;//매치 성공한 블럭들 이벤트 처리
+    public static event Action _match_compte;//모든 매치가 끝났을때
+
+    //매치 진행중인지 체크
+    bool _ismatching;
+    bool CheckMatching() => _ismatching;
 
     void OnEnable()
     {
         MatchFiledManager._match_complte_event += AllBlockMatch;
         MatchFiledManager._block_move_event += BlockMatch;
+        MatchFiledManager._match_setting_check_event += CheckMatching;
     }
 
     void OnDisable()
     {
         MatchFiledManager._match_complte_event -= AllBlockMatch;
         MatchFiledManager._block_move_event -= BlockMatch;
+        MatchFiledManager._match_setting_check_event -= CheckMatching;
     }
 
     void MatchComplte(List<UI_Match_Block> x_list, List<UI_Match_Block> y_list)
@@ -111,6 +118,7 @@ public class MatchManager : MonoBehaviour
 
     void AllBlockMatch(Dictionary<(int, int), UI_Match_Block> matchblockdic, int width, int height)
     {
+        _ismatching = true;
         //블록이 아닌 슬롯의 정보를 저장하여 위치값 계산할 예정
         var maxcount = matchblockdic.Count;
         int key_y = 0;
@@ -136,18 +144,19 @@ public class MatchManager : MonoBehaviour
                 key_y++;
             }
         }
+        _ismatching = false;
     }
 
     async void BlockMatch(Dictionary<(int, int), UI_Match_Block> matchblockdic, UI_Match_Block pointdown, UI_Match_Block pointenter, int width, int height)
     {
+        _ismatching = true;
         var downpos = pointdown.GetPos();
         var enterpos = pointenter.GetPos();
 
         var downpoint = pointdown.GetPoint();
         var enterpoint = pointenter.GetPoint();
 
-        pointdown.ChangePoint(enterpoint.x, enterpoint.y, enterpos);
-        pointenter.ChangePoint(downpoint.x, downpoint.y, downpos);
+        pointdown.Swap(pointenter);
 
         await UniTask.WaitForSeconds(0.5f, cancellationToken: this.GetCancellationTokenOnDestroy());
 
@@ -171,19 +180,20 @@ public class MatchManager : MonoBehaviour
         //매칭 성공 시 원상복구 막기 
         if (downpointcheck || entercheck)
         {
+            _ismatching = false;
             return;
         }
 
         //매칭 실패 시 원상복구
         pointdown.ChangePoint(downpoint.x, downpoint.y, downpos);
         pointenter.ChangePoint(enterpoint.x, enterpoint.y, enterpos);
+        _ismatching = false;
     }
 
     (List<UI_Match_Block> matchblocklist_x, List<UI_Match_Block> matchblocklist_y) GetMatchBlock(int key_x, int key_y, int width, int height, Dictionary<(int, int), UI_Match_Block> matchblockdic, bool isall = false)
     {
         List<UI_Match_Block> matchblocklist_x = new List<UI_Match_Block>();
         List<UI_Match_Block> matchblocklist_y = new List<UI_Match_Block>();
-
 
         for (int x = isall ? 0 : key_x; x < width; x++)
         {

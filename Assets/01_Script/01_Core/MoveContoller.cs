@@ -39,7 +39,10 @@ public class MoveContoller : MonoBehaviour
     /// </summary>
     void StartMovement(Vector2 targetPos)
     {
-        if (isMoving) return;
+        if (Vector2.Distance(cachedTransform.anchoredPosition, targetPos) == 0)
+        {
+            return;
+        }
 
         currentStartPos = cachedTransform.anchoredPosition;
         currentTargetPos = targetPos;
@@ -92,10 +95,7 @@ public class MoveContoller : MonoBehaviour
     /// </summary>
     public void MoveTo(Vector2 position)
     {
-        if (!isMoving)
-        {
-            StartMovement(position);
-        }
+        StartMovement(position);
     }
 
     /// <summary>
