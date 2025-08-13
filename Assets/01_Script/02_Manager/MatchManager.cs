@@ -9,7 +9,8 @@ public class MatchManager : MonoBehaviour
 {
     public static event Action<int, int, EMATCHTYPE> _match_complte_createblock_event;//매치 성공 후 생성되는 개별 블록 이벤트 
     public static event Action<int, int> _match_complte_block_event;//매치 성공한 블럭들 이벤트 처리
-    public static event Action _match_compte;//모든 매치가 끝났을때
+    public static event Action _user_move_match_complte;//유저가 블록 이동 후 매치 성공했을때 
+
 
     //매치 진행중인지 체크
     bool _ismatching;
@@ -18,7 +19,7 @@ public class MatchManager : MonoBehaviour
     void OnEnable()
     {
         MatchFiledManager._match_complte_event += AllBlockMatch;
-        MatchFiledManager._block_move_event += BlockMatch;
+        MatchFiledManager._block_move_event += UserMoveBlockMatch;
         MatchFiledManager._match_setting_check_event += CheckMatching;
         MatchFiledManager._matchsimuration_check_event += SimulationBlockMatch;
     }
@@ -26,7 +27,7 @@ public class MatchManager : MonoBehaviour
     void OnDisable()
     {
         MatchFiledManager._match_complte_event -= AllBlockMatch;
-        MatchFiledManager._block_move_event -= BlockMatch;
+        MatchFiledManager._block_move_event -= UserMoveBlockMatch;
         MatchFiledManager._match_setting_check_event -= CheckMatching;
         MatchFiledManager._matchsimuration_check_event -= SimulationBlockMatch;
     }
@@ -149,7 +150,10 @@ public class MatchManager : MonoBehaviour
         _ismatching = false;
     }
 
-    async void BlockMatch(Dictionary<(int, int), UI_Match_Block> matchblockdic, UI_Match_Block pointdown, UI_Match_Block pointenter, int width, int height)
+    /// <summary>
+    /// 유저가 직접 이동해서 매칭하는 것
+    /// </summary>
+    async void UserMoveBlockMatch(Dictionary<(int, int), UI_Match_Block> matchblockdic, UI_Match_Block pointdown, UI_Match_Block pointenter, int width, int height)
     {
         _ismatching = true;
         var downpos = pointdown.GetPos();
@@ -182,6 +186,7 @@ public class MatchManager : MonoBehaviour
         //매칭 성공 시 원상복구 막기 
         if (downpointcheck || entercheck)
         {
+            _user_move_match_complte?.Invoke();
             _ismatching = false;
             return;
         }

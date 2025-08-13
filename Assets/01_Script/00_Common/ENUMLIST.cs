@@ -18,3 +18,14 @@ public enum EBLOCKCOLORTYPE
     GREEN,
     MAX
 }
+
+public enum EGAMECLEARCONDITION
+{
+    SCORE,//점수
+    BLOCKBRAKE, //블록 제거 갯수
+}
+
+public enum EGAMEOVERCONDITION
+{
+    MOVECOUNT, //이동 횟수
+}

@@ -23,6 +23,7 @@ public class MatchFiledManager : MonoBehaviour
 
     public static event Func<bool> _match_setting_check_event;//블록 생성, 이동와 같은 것들을 진행해도 되는지 체크하는 이벤트
     public static event Action _no_match_block_event;//매치되는 블록 없을때 이벤트
+    public static event Action _replay_complte_event;//모든 준비가 완료되었고 이제 시작해도 될때
 
     float _slotsize;//슬롯 사이즈 캐싱
     bool _issetting;//셋팅중인지 체크하는 변수
@@ -82,6 +83,7 @@ public class MatchFiledManager : MonoBehaviour
                 WaitAndMove();
                 return;
             }
+            _replay_complte_event?.Invoke();
             _issetting = false;
             return;
         }
