@@ -206,13 +206,13 @@ public class MatchFiledManager : MonoBehaviour
         var block = blockobject.GetComponent<UI_Match_Block>();
         var movepoint = new Vector2(posx, posy);
         block.Setting(movepoint);
-        block.ChangePoint(x, y, movepoint);
+        block.ChangePoint(x, y, movepoint, true);
     }
 
     //전체 이동
     async void WaitAndMove()
     {
-        await UniTask.WaitForSeconds(0.5f, cancellationToken: this.GetCancellationTokenOnDestroy());
+        await UniTask.WaitForSeconds(0.25f, cancellationToken: this.GetCancellationTokenOnDestroy());
         _match_complte_event?.Invoke(_matchblockdic, Width, Height);
         FiledReSetting().Forget();
     }
@@ -272,8 +272,14 @@ public class MatchFiledManager : MonoBehaviour
 
     void ChangeIDX(int x, int y, UI_Match_Block block)
     {
-        var origin = _matchblockdic[(x, y)];
-        _matchblockdic[(x, y)] = block;
+        if (_matchblockdic.TryGetValue((x, y), out var origin))
+        {
+            _matchblockdic[(x, y)] = block;
+        }
+        else
+        {
+            Debug.LogError($"이거는 에런데? : {x}_{y}");
+        }
 
         var point = block.GetPoint();
         if (point.x == -1)

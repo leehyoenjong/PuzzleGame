@@ -13,7 +13,7 @@ public class MoveContoller : MonoBehaviour
     float currentMoveTime;
     float elapsedTime;
     bool isMoving = false;
-    public bool IsMoving() => isMoving;
+    public bool CheckMoving() => isMoving;
 
     // 캐시된 컴포넌트
     RectTransform cachedTransform;
@@ -23,6 +23,7 @@ public class MoveContoller : MonoBehaviour
     {
         // 컴포넌트 캐싱으로 성능 최적화
         cachedTransform = GetComponent<RectTransform>();
+        MatchFiledManager._match_setting_check_list.Add(CheckMoving);
     }
 
     void Update()

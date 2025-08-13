@@ -259,8 +259,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86383006d1c474a4d8522d003d482507, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Width: 3
-  Height: 3
+  Width: 7
+  Height: 7
   _matchslot: {fileID: 8113716226079870034, guid: 6f93dc35d0c9f8241a959457441f5b9f, type: 3}
   _matchblock:
   - {fileID: 782142937804636289, guid: 49b2a9aed1657984f98d7fa25df24c5b, type: 3}
@@ -337,12 +337,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _clear_condition:
-    _condtion: 1
-    _score: 100
+    _condtion: 0
+    _score: 50000
     _blockbreak: 1
   _over_condition:
     _condtion: 0
-    _movecount: 300
+    _movecount: 30
 --- !u!114 &141673983
 MonoBehaviour:
   m_ObjectHideFlags: 0

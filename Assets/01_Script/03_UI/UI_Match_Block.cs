@@ -23,7 +23,7 @@ public class UI_Match_Block : MonoBehaviour
     EBLOCKCOLORTYPE _colortypes;
     public EBLOCKCOLORTYPE GetBlockColorTypes() => _colortypes;
 
-    int _x, _y;
+    [SerializeField] int _x, _y;
     public (int x, int y) GetPoint() => (_x, _y);
 
     public static event Action<UI_Match_Block> _mathcomplte_event;
