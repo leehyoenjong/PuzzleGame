@@ -32,19 +32,30 @@ public class UI_Match_Block : MonoBehaviour
     void OnEnable()
     {
         MatchManager._match_complte_block_event += ComplteMatch;
-        MatchFiledManager._no_match_block_event += SettingTypes;
+        MatchFiledManager._no_match_block_event += NoMatchTypeChange;
     }
 
     void OnDisable()
     {
         MatchManager._match_complte_block_event -= ComplteMatch;
-        MatchFiledManager._no_match_block_event -= SettingTypes;
+        MatchFiledManager._no_match_block_event -= NoMatchTypeChange;
     }
 
     public void Setting(Vector2 createpos)
     {
         ResetPoint();
         _rt.anchoredPosition = createpos;
+        SettingTypes();
+    }
+
+    void NoMatchTypeChange()
+    {
+        //기본 블록만 변화하도록
+        if (_blocktype != EMATCHTYPE.THREE)
+        {
+            return;
+        }
+
         SettingTypes();
     }
 
