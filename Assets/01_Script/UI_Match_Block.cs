@@ -4,10 +4,6 @@ using UnityEngine.UI;
 
 public class UI_Match_Block : MonoBehaviour
 {
-    [Header("블록 타입")]
-    [SerializeField] EMATCHTYPE _blocktype;
-    public EMATCHTYPE GetBlockTypes() => _blocktype;
-
     [Header("기본")]
     [SerializeField] Image _image;
     [SerializeField] MoveContoller _movecontroller;
@@ -15,19 +11,26 @@ public class UI_Match_Block : MonoBehaviour
     public Vector2 GetPos() => _rt.anchoredPosition;
     public MoveContoller GetMoveController() => _movecontroller;
 
+    [Header("블록 타입")]
+    [SerializeField] EMATCHTYPE _blocktype;
+    public EMATCHTYPE GetBlockTypes() => _blocktype;
+
+    [Header("점수")]
+    [SerializeField] int _score;
+    public int GetScore() => _score;
+
     //타입
-    [SerializeField] EBLOCKCOLORTYPE _colortypes;
+    EBLOCKCOLORTYPE _colortypes;
     public EBLOCKCOLORTYPE GetBlockColorTypes() => _colortypes;
 
-    public static event Action<int, int> _mathcomplte_event;
+    int _x, _y;
+    public (int x, int y) GetPoint() => (_x, _y);
+
+    public static event Action<UI_Match_Block> _mathcomplte_event;
     public static event Action<int, int, UI_Match_Block> _move_block_event;
     public static event Action<UI_Match_Block> _point_down_event;
     public static event Action<UI_Match_Block> _point_enter_event;
     public static event Action _point_up_event;
-
-
-    [SerializeField] int _x, _y;
-    public (int x, int y) GetPoint() => (_x, _y);
 
     void OnEnable()
     {
@@ -127,7 +130,7 @@ public class UI_Match_Block : MonoBehaviour
         }
 
         Destroy(this.gameObject);
-        _mathcomplte_event?.Invoke(x, y);
+        _mathcomplte_event?.Invoke(this);
     }
 
     Color GetColor()

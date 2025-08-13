@@ -104,10 +104,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30d761cf96a21424b891ab1335b7790c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _blocktype: 0
   _image: {fileID: 8118859202639291038}
   _movecontroller: {fileID: 3222959407069638438}
   _rt: {fileID: 4548716164120518513}
+  _blocktype: 0
+  _score: 100
+  _colortypes: 0
+  _x: 0
+  _y: 0
 --- !u!114 &3668103707140489523
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -280,8 +280,8 @@ public class MatchFiledManager : MonoBehaviour
         _matchblockdic[(point.x, point.y)] = origin;
     }
 
-    void RemoveIDX(int x, int y)
+    void RemoveIDX(UI_Match_Block block)
     {
-        _matchblockdic[(x, y)] = null;
+        _matchblockdic[block.GetPoint()] = null;
     }
 }
