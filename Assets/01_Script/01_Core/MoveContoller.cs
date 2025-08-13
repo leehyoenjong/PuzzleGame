@@ -13,6 +13,7 @@ public class MoveContoller : MonoBehaviour
     float currentMoveTime;
     float elapsedTime;
     bool isMoving = false;
+    public bool IsMoving() => isMoving;
 
     // 캐시된 컴포넌트
     RectTransform cachedTransform;
@@ -97,9 +98,4 @@ public class MoveContoller : MonoBehaviour
     {
         StartMovement(position);
     }
-
-    /// <summary>
-    /// 현재 이동 중인지 확인
-    /// </summary>
-    public bool IsMoving() => isMoving;
 }

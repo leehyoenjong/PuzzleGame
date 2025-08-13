@@ -20,7 +20,7 @@ public class MatchManager : MonoBehaviour
     {
         MatchFiledManager._match_complte_event += AllBlockMatch;
         MatchFiledManager._block_move_event += UserMoveBlockMatch;
-        MatchFiledManager._match_setting_check_event += CheckMatching;
+        MatchFiledManager._match_setting_check_list.Add(CheckMatching);
         MatchFiledManager._matchsimuration_check_event += SimulationBlockMatch;
     }
 
@@ -28,7 +28,6 @@ public class MatchManager : MonoBehaviour
     {
         MatchFiledManager._match_complte_event -= AllBlockMatch;
         MatchFiledManager._block_move_event -= UserMoveBlockMatch;
-        MatchFiledManager._match_setting_check_event -= CheckMatching;
         MatchFiledManager._matchsimuration_check_event -= SimulationBlockMatch;
     }
 

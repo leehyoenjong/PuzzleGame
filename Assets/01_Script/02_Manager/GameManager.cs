@@ -12,23 +12,21 @@ public class GameManager : MonoBehaviour
 
     void OnEnable()
     {
-        _isover = false;
         ScoreManager._add_score_event += AddScoreData;
         MoveCountManager._movecount_event += AddMoveCountData;
         UI_Match_Block._mathcomplte_event += AddBlockBreakData;
         MatchFiledManager._replay_complte_event += CheckGameClearAndOver;
-        MatchFiledManager._match_setting_check_event += GetOver;
-        BlockControllerManager._block_controller_check_event += GetOver;
+        MatchFiledManager._match_setting_check_list.Add(GetOver);
+        BlockControllerManager._block_controller_check_list.Add(GetOver);
     }
 
     void OnDisable()
     {
+        _isover = false;
         ScoreManager._add_score_event -= AddScoreData;
-        MoveCountManager._movecount_event += AddMoveCountData;
+        MoveCountManager._movecount_event -= AddMoveCountData;
         UI_Match_Block._mathcomplte_event -= AddBlockBreakData;
         MatchFiledManager._replay_complte_event -= CheckGameClearAndOver;
-        MatchFiledManager._match_setting_check_event += GetOver;
-        BlockControllerManager._block_controller_check_event -= GetOver;
     }
 
     void AddScoreData(int score)

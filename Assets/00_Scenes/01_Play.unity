@@ -337,12 +337,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _clear_condition:
-    _condtion: 0
-    _score: 10000
-    _blockbreak: 0
+    _condtion: 1
+    _score: 100
+    _blockbreak: 1
   _over_condition:
     _condtion: 0
-    _movecount: 30
+    _movecount: 300
 --- !u!114 &141673983
 MonoBehaviour:
   m_ObjectHideFlags: 0

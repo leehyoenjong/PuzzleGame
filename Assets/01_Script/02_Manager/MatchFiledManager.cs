@@ -21,7 +21,7 @@ public class MatchFiledManager : MonoBehaviour
     public static event Func<Dictionary<(int, int), UI_Match_Block>, int, int, bool> _matchsimuration_check_event;//매치 시뮬레이션 체크 이벤트
     public static event Action<Dictionary<(int, int), UI_Match_Block>, UI_Match_Block, UI_Match_Block, int, int> _block_move_event;//이동 진행시 이벤트
 
-    public static event Func<bool> _match_setting_check_event;//블록 생성, 이동와 같은 것들을 진행해도 되는지 체크하는 이벤트
+    public static List<Func<bool>> _match_setting_check_list = new List<Func<bool>>();//블록 생성, 이동와 같은 것들을 진행해도 되는지 체크하는 이벤트
     public static event Action _no_match_block_event;//매치되는 블록 없을때 이벤트
     public static event Action _replay_complte_event;//모든 준비가 완료되었고 이제 시작해도 될때
 
@@ -31,7 +31,7 @@ public class MatchFiledManager : MonoBehaviour
 
     void OnEnable()
     {
-        BlockControllerManager._block_controller_check_event += GetSetting;
+        BlockControllerManager._block_controller_check_list.Add(GetSetting);
         MatchManager._match_complte_createblock_event += CreateMatchBlock;
         BlockControllerManager._move_block_event += WaitAndMove;
         UI_Match_Block._move_block_event += ChangeIDX;
@@ -40,11 +40,12 @@ public class MatchFiledManager : MonoBehaviour
 
     void OnDisable()
     {
-        BlockControllerManager._block_controller_check_event -= GetSetting;
+        BlockControllerManager._block_controller_check_list.Remove(GetSetting);
         MatchManager._match_complte_createblock_event -= CreateMatchBlock;
         BlockControllerManager._move_block_event -= WaitAndMove;
         UI_Match_Block._move_block_event -= ChangeIDX;
         UI_Match_Block._mathcomplte_event -= RemoveIDX;
+        _match_setting_check_list.Clear();
     }
 
     void Start()
@@ -62,11 +63,11 @@ public class MatchFiledManager : MonoBehaviour
         WaitAndMove();
     }
 
+
     async UniTaskVoid FiledReSetting()
     {
         _issetting = true;
-        //모든 기능이 다 종료되었을때 진행
-        await UniTask.WaitUntil(() => (bool)_match_setting_check_event?.Invoke() == false);
+        await UniTask.WaitUntil(() => _match_setting_check_list.All(x => x.Invoke() == false), cancellationToken: this.GetCancellationTokenOnDestroy());
 
         //새롭게 생성해야할 블록이 있는지 체크
         var blockList = _matchblockdic.Values.Where(x => x != null).ToList();
