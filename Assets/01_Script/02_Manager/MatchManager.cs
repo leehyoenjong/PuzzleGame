@@ -195,11 +195,12 @@ public class MatchManager : MonoBehaviour
     bool SimulationBlockMatch(Dictionary<(int, int), UI_Match_Block> matchblockdic, int width, int height)
     {
         _ismatching = true;
-        (int x, int y)[] simurationkeylist = new (int x, int y)[4];
-        simurationkeylist[0] = (0, -1);//상
-        simurationkeylist[1] = (0, 1);//하
-        simurationkeylist[2] = (-1, 0);//좌
-        simurationkeylist[3] = (1, 0);//우
+        (int x, int y)[] simurationkeylist = new (int x, int y)[5];
+        simurationkeylist[0] = (0, 0);//오리지널
+        simurationkeylist[1] = (0, -1);//상
+        simurationkeylist[2] = (0, 1);//하
+        simurationkeylist[3] = (-1, 0);//좌
+        simurationkeylist[4] = (1, 0);//우
 
         //블록이 아닌 슬롯의 정보를 저장하여 위치값 계산할 예정
         var maxcount = matchblockdic.Count;
@@ -213,8 +214,8 @@ public class MatchManager : MonoBehaviour
             {
                 var origin = matchblockdic[(key_x, key_y)];
 
-                var nextkeyx = key_x + simurationkeylist[i].x;
-                var nextkeyy = key_y + simurationkeylist[i].y;
+                var nextkeyx = key_x + simurationkeylist[point].x;
+                var nextkeyy = key_y + simurationkeylist[point].y;
                 if (matchblockdic.TryGetValue((nextkeyx, nextkeyy), out var nextblock) == false)
                 {
                     continue;
@@ -222,7 +223,9 @@ public class MatchManager : MonoBehaviour
 
                 //시뮬레이션 이동
                 origin.Swap(nextblock, true);
-                var matchresult = GetMatchBlock(key_x, key_y, width, height, matchblockdic);
+
+                //시뮬레이션 시작
+                var matchresult = GetMatchBlock(nextkeyx, nextkeyy, width, height, matchblockdic, true);
 
                 //다시 원상복구
                 origin.Swap(nextblock, true);
@@ -233,6 +236,7 @@ public class MatchManager : MonoBehaviour
                     _ismatching = false;
                     return true;
                 }
+
                 //실패시 반복
             }
             //매치 실패 시 다음 칸으로 이동

@@ -32,18 +32,24 @@ public class UI_Match_Block : MonoBehaviour
     void OnEnable()
     {
         MatchManager._match_complte_block_event += ComplteMatch;
+        MatchFiledManager._no_match_block_event += SettingTypes;
     }
 
     void OnDisable()
     {
         MatchManager._match_complte_block_event -= ComplteMatch;
+        MatchFiledManager._no_match_block_event -= SettingTypes;
     }
 
     public void Setting(Vector2 createpos)
     {
         ResetPoint();
         _rt.anchoredPosition = createpos;
+        SettingTypes();
+    }
 
+    void SettingTypes()
+    {
         var ran = UnityEngine.Random.Range(0, (int)EBLOCKCOLORTYPE.MAX);
         _colortypes = (EBLOCKCOLORTYPE)ran;
         _image.color = GetColor();

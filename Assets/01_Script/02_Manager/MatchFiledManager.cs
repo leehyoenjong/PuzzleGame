@@ -22,6 +22,7 @@ public class MatchFiledManager : MonoBehaviour
     public static event Action<Dictionary<(int, int), UI_Match_Block>, UI_Match_Block, UI_Match_Block, int, int> _block_move_event;//이동 진행시 이벤트
 
     public static event Func<bool> _match_setting_check_event;//블록 생성, 이동와 같은 것들을 진행해도 되는지 체크하는 이벤트
+    public static event Action _no_match_block_event;//매치되는 블록 없을때 이벤트
 
     float _slotsize;//슬롯 사이즈 캐싱
     bool _issetting;//셋팅중인지 체크하는 변수
@@ -73,6 +74,14 @@ public class MatchFiledManager : MonoBehaviour
             //매치 가능한 블록이 있는지 체크
             var checksimurationmatchblock = (bool)_matchsimuration_check_event?.Invoke(_matchblockdic, Width, Height);
 
+            //매치 가능한 블록이 없다면
+            if (checksimurationmatchblock == false)
+            {
+                //특수 블록 제외 모든 블록 재셋팅
+                _no_match_block_event?.Invoke();
+                WaitAndMove();
+                return;
+            }
             _issetting = false;
             return;
         }
