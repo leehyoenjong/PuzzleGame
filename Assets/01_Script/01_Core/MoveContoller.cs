@@ -26,6 +26,11 @@ public class MoveContoller : MonoBehaviour
         MatchFiledManager._match_setting_check_list.Add(CheckMoving);
     }
 
+    void OnDisable()
+    {
+        MatchFiledManager._match_setting_check_list.Remove(CheckMoving);
+    }
+
     void Update()
     {
         // 이동 처리

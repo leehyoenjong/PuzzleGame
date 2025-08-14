@@ -71,6 +71,15 @@ public class MatchFiledManager : MonoBehaviour
 
         //새롭게 생성해야할 블록이 있는지 체크
         var blockList = _matchblockdic.Values.Where(x => x != null).ToList();
+
+        var log = "남은 블록: X - ";
+
+        foreach (var item in blockList)
+        {
+            log += item.GetPoint() + ", ";
+        }
+        Debug.Log(log);
+
         if (blockList.Count == Width * Height)
         {
             //매치 가능한 블록이 있는지 체크
@@ -89,6 +98,7 @@ public class MatchFiledManager : MonoBehaviour
             return;
         }
 
+        Debug.Log("생성 전 이동");
         //먼저 기존에 남아있던 블록 아래로 이동 
         await MoveMatchBlock(blockList);
 
@@ -100,6 +110,7 @@ public class MatchFiledManager : MonoBehaviour
             return;
         }
 
+        Debug.Log("생성 후 이동");
         //한번 더 생성된 것들 포함하여 이동 진행
         await MoveMatchBlock(createblockresult.blocklist);
         WaitAndMove();
@@ -207,6 +218,7 @@ public class MatchFiledManager : MonoBehaviour
         var movepoint = new Vector2(posx, posy);
         block.Setting(movepoint);
         block.ChangePoint(x, y, movepoint, true);
+        Debug.Log($"생성 완료 : {block.GetPoint()}");
     }
 
     //전체 이동
@@ -236,7 +248,7 @@ public class MatchFiledManager : MonoBehaviour
 
         int movecount = 0;
 
-        for (int y = Height - 1; y > -1; y--)
+        for (int y = Height - 1; y >= 0; y--)
         {
             movecount = 0;
             for (int x = 0; x < Width; x++)
@@ -252,15 +264,21 @@ public class MatchFiledManager : MonoBehaviour
                 var targetpos = _matchslotdic[key].GetPos();
 
                 //blocklist가 x값은 같고 y값은 큰값만 가져올 것
-                var block = blocklist.FirstOrDefault(x => x != null && x.GetPos().x == targetpos.x && x.GetPos().y > targetpos.y);
+                var block = blocklist.FirstOrDefault(x => x != null && x.GetPos().x == targetpos.x && x.GetPoint().y < key.y);
                 if (block == null || block == default)
                 {
                     continue;
                 }
 
+                //이동한 블록 제거
                 block.ChangePoint(x, y, targetpos);
                 movecount++;
-                //이동한 블록 제거
+
+                if (targetpos == block.GetPos())
+                {
+                    movecount--;
+                }
+
                 blocklist.Remove(block);
                 if (blocklist.Count <= 0)
                 {

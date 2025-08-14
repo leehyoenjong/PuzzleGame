@@ -203,8 +203,8 @@ public class MatchManager : MonoBehaviour
         if (downpointcheck)
         {
             //타입별 매칭 처리
-            // matchresult.matchblocklist_x = GetMatchTypeFuction(matchresult.matchblocklist_x, matchblockdic);
-            // matchresult.matchblocklist_y = GetMatchTypeFuction(matchresult.matchblocklist_y, matchblockdic);
+            matchresult.matchblocklist_x = GetMatchTypeFuction(matchresult.matchblocklist_x, matchblockdic);
+            matchresult.matchblocklist_y = GetMatchTypeFuction(matchresult.matchblocklist_y, matchblockdic);
 
             //매칭 성공하면 위치는 고정하고 매칭 성공 처리 진행
             MatchComplte(matchresult.matchblocklist_x, matchresult.matchblocklist_y);
@@ -214,8 +214,8 @@ public class MatchManager : MonoBehaviour
         var entercheck = matchresult_enter.matchblocklist_x.Count >= 3 || matchresult_enter.matchblocklist_y.Count >= 3;
         if (entercheck)
         {
-            // matchresult_enter.matchblocklist_x = GetMatchTypeFuction(matchresult_enter.matchblocklist_x, matchblockdic);
-            // matchresult_enter.matchblocklist_y = GetMatchTypeFuction(matchresult_enter.matchblocklist_y, matchblockdic);
+            matchresult_enter.matchblocklist_x = GetMatchTypeFuction(matchresult_enter.matchblocklist_x, matchblockdic);
+            matchresult_enter.matchblocklist_y = GetMatchTypeFuction(matchresult_enter.matchblocklist_y, matchblockdic);
 
             //매칭 성공하면 위치는 고정하고 매칭 성공 처리 진행
             MatchComplte(matchresult_enter.matchblocklist_x, matchresult_enter.matchblocklist_y);
