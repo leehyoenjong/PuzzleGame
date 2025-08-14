@@ -20,7 +20,7 @@ public class UI_Match_Block : MonoBehaviour
     public int GetScore() => _score;
 
     //타입
-    EBLOCKCOLORTYPE _colortypes;
+    [SerializeField] EBLOCKCOLORTYPE _colortypes;
     public EBLOCKCOLORTYPE GetBlockColorTypes() => _colortypes;
 
     [SerializeField] int _x, _y;

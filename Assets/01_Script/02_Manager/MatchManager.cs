@@ -68,9 +68,23 @@ public class MatchManager : MonoBehaviour
                 }
                 break;
         }
+
+        if (x_list.Count > 0 || y_list.Count > 0)
+        {
+            string log = "삭제 목록: \nX : ";
+            foreach (var item in x_list)
+            {
+                log += item.GetPoint() + ", ";
+            }
+            log += "nY : ";
+            foreach (var item in y_list)
+            {
+                log += item.GetPoint() + ", ";
+            }
+            Debug.Log(log);
+        }
         SetMatchBlock(x_list, y_list);
         _match_complte_createblock_event?.Invoke(middlepoint.Item1, middlepoint.Item2, matchtype);
-        Debug.Log($"생성 {middlepoint.x}_{middlepoint.y}!");
     }
 
     void SetMatchBlock(List<UI_Match_Block> xlist, List<UI_Match_Block> ylist)
@@ -188,20 +202,24 @@ public class MatchManager : MonoBehaviour
         //매치 성공
         if (downpointcheck)
         {
-            //매칭 성공하면 위치는 고정하고 매칭 성공 처리 진행
-            MatchComplte(matchresult.matchblocklist_x, matchresult.matchblocklist_y);
+            //타입별 매칭 처리
             // matchresult.matchblocklist_x = GetMatchTypeFuction(matchresult.matchblocklist_x, matchblockdic);
             // matchresult.matchblocklist_y = GetMatchTypeFuction(matchresult.matchblocklist_y, matchblockdic);
+
+            //매칭 성공하면 위치는 고정하고 매칭 성공 처리 진행
+            MatchComplte(matchresult.matchblocklist_x, matchresult.matchblocklist_y);
         }
 
         var matchresult_enter = GetMatchBlock(enterpoint.x, enterpoint.y, width, height, matchblockdic, true);
         var entercheck = matchresult_enter.matchblocklist_x.Count >= 3 || matchresult_enter.matchblocklist_y.Count >= 3;
         if (entercheck)
         {
-            //매칭 성공하면 위치는 고정하고 매칭 성공 처리 진행
-            MatchComplte(matchresult_enter.matchblocklist_x, matchresult_enter.matchblocklist_y);
             // matchresult_enter.matchblocklist_x = GetMatchTypeFuction(matchresult_enter.matchblocklist_x, matchblockdic);
             // matchresult_enter.matchblocklist_y = GetMatchTypeFuction(matchresult_enter.matchblocklist_y, matchblockdic);
+
+            //매칭 성공하면 위치는 고정하고 매칭 성공 처리 진행
+            MatchComplte(matchresult_enter.matchblocklist_x, matchresult_enter.matchblocklist_y);
+
         }
 
         //매칭 성공 시 원상복구 막기 
@@ -274,80 +292,51 @@ public class MatchManager : MonoBehaviour
         return false;
     }
 
-    EMATCHING MatingBlock((int x, int y) key, (int x, int y) nextkey, int maxvlue, Dictionary<(int, int), UI_Match_Block> matchblockdic, List<UI_Match_Block> matchblocklist)
+    EMATCHING MatingBlock((int x, int y) key, Dictionary<(int, int), UI_Match_Block> matchblockdic, List<UI_Match_Block> matching)
     {
         if (matchblockdic[key] == null)
         {
-            if (matchblocklist.Count > 0)
-            {
-                return EMATCHING.STOP;
-            }
+            return EMATCHING.STOP;
+        }
 
+        if (matching.Count <= 0)
+        {
+            matching.Add(matchblockdic[key]);
             return EMATCHING.ING;
         }
 
         //이미 잡힌 매칭이 있을때
         var types = matchblockdic[key].GetBlockColorTypes();
-        if (matchblocklist.Count > 0)
+        // 매칭 잡힌 타입과 현재 타입이 같은지 체크
+        if (matching[0].GetBlockColorTypes() != types)
         {
-            // 매칭 잡힌 타입과 현재 타입이 같은지 체크
-            if (matchblocklist[0].GetBlockColorTypes() != types)
-            {
-                return EMATCHING.STOP;
-            }
-            matchblocklist.Add(matchblockdic[key]);
-            return EMATCHING.ING;
+            return EMATCHING.STOP;
         }
 
-        //더 옆으로 갈 곳이 없기 때문에 종료
-        if (nextkey.Item1 >= maxvlue || nextkey.Item2 >= maxvlue)
-        {
-            return EMATCHING.ING;
-        }
-
-        if (matchblockdic[nextkey] == null)
-        {
-            return EMATCHING.ING;
-        }
-        var nexttypes = matchblockdic[nextkey].GetBlockColorTypes();
-
-        //아직 매칭 잡힌게 없을 경우 다음 타입과 현재 타입 체크 
-        if (types != nexttypes)
-        {
-            return EMATCHING.ING;
-        }
-
-        //매칭 되었기 때문에 저장
-        matchblocklist.Add(matchblockdic[key]);
+        matching.Add(matchblockdic[key]);
         return EMATCHING.ING;
     }
 
     (List<UI_Match_Block> matchblocklist_x, List<UI_Match_Block> matchblocklist_y) GetMatchBlock(int key_x, int key_y, int width, int height, Dictionary<(int, int), UI_Match_Block> matchblockdic, bool isall = false)
     {
-        List<UI_Match_Block> matchblocklist_x = new List<UI_Match_Block>();
-        List<UI_Match_Block> matchblocklist_y = new List<UI_Match_Block>();
+        List<UI_Match_Block> matching = new List<UI_Match_Block>();
 
+        List<UI_Match_Block> matchblocklist_x = new List<UI_Match_Block>();
         for (int x = isall ? 0 : key_x; x < width; x++)
         {
             var key = (x, key_y);
-            var nextkey = (x + 1, key_y);
-            var state = MatingBlock(key, nextkey, width, matchblockdic, matchblocklist_x);
-            if (state == EMATCHING.STOP)
-            {
-                break;
-            }
+            MatingBlock(key, matchblockdic, matching);
         }
+        matchblocklist_x.AddRange(matching);
 
+        List<UI_Match_Block> matchblocklist_y = new List<UI_Match_Block>();
+        matching.Clear();
         for (int y = isall ? 0 : key_y; y < height; y++)
         {
             var key = (key_x, y);
-            var nextkey = (key_x, y + 1);
-            var state = MatingBlock(key, nextkey, width, matchblockdic, matchblocklist_y);
-            if (state == EMATCHING.STOP)
-            {
-                break;
-            }
+            MatingBlock(key, matchblockdic, matching);
         }
+        matchblocklist_y.AddRange(matching);
 
         //3개 이상이 아니면 매치가 되지 않은 것이기 때문에 Clear
         if (matchblocklist_x.Count <= 2)
@@ -376,25 +365,24 @@ public class MatchManager : MonoBehaviour
                 case EMATCHTYPE.FORE:
                     breakblocklist.AddRange(SetForeMatch(i, blocklist, matchblockdic));
                     break;
-                //같은 색상 모두 파괴
-                case EMATCHTYPE.FIVE:
-                    breakblocklist.AddRange(SetForeMatch(i, blocklist, matchblockdic));
-                    break;
-                //3x3 파괴
-                case EMATCHTYPE.CROSS_THREE:
-                    breakblocklist.AddRange(SetForeMatch(i, blocklist, matchblockdic));
-                    break;
-                //x,y한줄씩 파괴
-                case EMATCHTYPE.CROSS_FOUR:
-                    breakblocklist.AddRange(SetForeMatch(i, blocklist, matchblockdic));
-                    break;
-                //전체 파괴
-                case EMATCHTYPE.CROSS_FIVE:
-                    breakblocklist.AddRange(SetForeMatch(i, blocklist, matchblockdic));
-                    break;
+                    // //같은 색상 모두 파괴
+                    // case EMATCHTYPE.FIVE:
+                    //     breakblocklist.AddRange(SetForeMatch(i, blocklist, matchblockdic));
+                    //     break;
+                    // //3x3 파괴
+                    // case EMATCHTYPE.CROSS_THREE:
+                    //     breakblocklist.AddRange(SetForeMatch(i, blocklist, matchblockdic));
+                    //     break;
+                    // //x,y한줄씩 파괴
+                    // case EMATCHTYPE.CROSS_FOUR:
+                    //     breakblocklist.AddRange(SetForeMatch(i, blocklist, matchblockdic));
+                    //     break;
+                    // //전체 파괴
+                    // case EMATCHTYPE.CROSS_FIVE:
+                    //     breakblocklist.AddRange(SetForeMatch(i, blocklist, matchblockdic));
+                    //     break;
             }
         }
-
         return breakblocklist.Distinct().ToList();
     }
 

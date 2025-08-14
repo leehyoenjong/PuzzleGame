@@ -234,8 +234,11 @@ public class MatchFiledManager : MonoBehaviour
         //y값이 낮은 순으로 정렬
         blocklist.Sort((a, b) => a.GetPos().y.CompareTo(b.GetPos().y));
 
+        int movecount = 0;
+
         for (int y = Height - 1; y > -1; y--)
         {
+            movecount = 0;
             for (int x = 0; x < Width; x++)
             {
                 var key = (x, y);
@@ -254,8 +257,9 @@ public class MatchFiledManager : MonoBehaviour
                 {
                     continue;
                 }
-                block.ChangePoint(x, y, targetpos);
 
+                block.ChangePoint(x, y, targetpos);
+                movecount++;
                 //이동한 블록 제거
                 blocklist.Remove(block);
                 if (blocklist.Count <= 0)
@@ -264,8 +268,11 @@ public class MatchFiledManager : MonoBehaviour
                 }
             }
 
-            //계단식으로 떨어지는 느낌을 주기 위해 0.1초 딜레이
-            await UniTask.WaitForSeconds(0.1f, cancellationToken: this.GetCancellationTokenOnDestroy());
+            if (movecount > 0)
+            {
+                //계단식으로 떨어지는 느낌을 주기 위해 0.25초 딜레이
+                await UniTask.WaitForSeconds(0.15f, cancellationToken: this.GetCancellationTokenOnDestroy());
+            }
         }
         return true;
     }
