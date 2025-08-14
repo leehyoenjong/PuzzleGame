@@ -34,5 +34,7 @@ public enum EMATCHING
 {
     NONE,
     ING,
-    STOP
+    STOP,
+    MAX_MATCHEND,
+    MAX_NOMATCHEND
 }

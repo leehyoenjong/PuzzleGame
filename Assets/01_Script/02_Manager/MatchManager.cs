@@ -74,12 +74,12 @@ public class MatchManager : MonoBehaviour
             string log = "삭제 목록: \nX : ";
             foreach (var item in x_list)
             {
-                log += item.GetPoint() + ", ";
+                log += item.GetPoint() + $"_{item.GetBlockColorTypes()}" + ", ";
             }
             log += "nY : ";
             foreach (var item in y_list)
             {
-                log += item.GetPoint() + ", ";
+                log += item.GetPoint() + $"_{item.GetBlockColorTypes()}" + ", ";
             }
             Debug.Log(log);
         }
@@ -219,7 +219,6 @@ public class MatchManager : MonoBehaviour
 
             //매칭 성공하면 위치는 고정하고 매칭 성공 처리 진행
             MatchComplte(matchresult_enter.matchblocklist_x, matchresult_enter.matchblocklist_y);
-
         }
 
         //매칭 성공 시 원상복구 막기 
@@ -292,7 +291,7 @@ public class MatchManager : MonoBehaviour
         return false;
     }
 
-    EMATCHING MatingBlock((int x, int y) key, Dictionary<(int, int), UI_Match_Block> matchblockdic, List<UI_Match_Block> matching)
+    EMATCHING MatingBlock((int x, int y) key, bool max, Dictionary<(int, int), UI_Match_Block> matchblockdic, List<UI_Match_Block> matching)
     {
         if (matchblockdic[key] == null)
         {
@@ -307,36 +306,80 @@ public class MatchManager : MonoBehaviour
 
         //이미 잡힌 매칭이 있을때
         var types = matchblockdic[key].GetBlockColorTypes();
+        matching.Add(matchblockdic[key]);
+
         // 매칭 잡힌 타입과 현재 타입이 같은지 체크
         if (matching[0].GetBlockColorTypes() != types)
         {
+            if (max)
+            {
+                return EMATCHING.MAX_NOMATCHEND;
+            }
+
             return EMATCHING.STOP;
         }
 
-        matching.Add(matchblockdic[key]);
-        return EMATCHING.ING;
+        return max ? EMATCHING.MAX_MATCHEND : EMATCHING.ING;
+    }
+
+    List<UI_Match_Block> GetMatchList(bool xory, int key_x, int key_y, int startvalue, int maxcount, Dictionary<(int, int), UI_Match_Block> matchblockdic)
+    {
+        List<UI_Match_Block> matching = new List<UI_Match_Block>();
+        List<UI_Match_Block> matchblocklist = new List<UI_Match_Block>();
+        var key = (0, 0);
+
+        for (int i = startvalue; i < maxcount; i++)
+        {
+            if (xory)
+            {
+                key = (i, key_y);
+            }
+            else
+            {
+                key = (key_x, i);
+            }
+
+            var checkmaxindex = i == maxcount - 1;
+            var state = MatingBlock(key, checkmaxindex, matchblockdic, matching);
+
+            if (checkmaxindex && matching.Count >= 3)
+            {
+                if (state == EMATCHING.MAX_MATCHEND)
+                {
+                    matchblocklist.AddRange(matching.GetRange(0, matching.Count));
+                }
+                else if (state == EMATCHING.MAX_NOMATCHEND)
+                {
+                    if (matching.Count > 3)
+                    {
+                        matchblocklist.AddRange(matching.GetRange(0, matching.Count - 1));
+                    }
+                }
+            }
+
+            if (state == EMATCHING.STOP)
+            {
+                if (matching.Count >= 4)
+                {
+                    // matching의 처음부터 Count-1개만큼 가져와서 추가
+                    matchblocklist.AddRange(matching.GetRange(0, matching.Count - 1));
+                    break;
+                }
+
+                if (matching.Count >= 2)
+                {
+                    matching.RemoveRange(0, matching.Count - 1);
+                }
+            }
+        }
+
+        return matchblocklist;
     }
 
     (List<UI_Match_Block> matchblocklist_x, List<UI_Match_Block> matchblocklist_y) GetMatchBlock(int key_x, int key_y, int width, int height, Dictionary<(int, int), UI_Match_Block> matchblockdic, bool isall = false)
     {
-        List<UI_Match_Block> matching = new List<UI_Match_Block>();
-
-        List<UI_Match_Block> matchblocklist_x = new List<UI_Match_Block>();
-        for (int x = isall ? 0 : key_x; x < width; x++)
-        {
-            var key = (x, key_y);
-            MatingBlock(key, matchblockdic, matching);
-        }
-        matchblocklist_x.AddRange(matching);
-
-        List<UI_Match_Block> matchblocklist_y = new List<UI_Match_Block>();
-        matching.Clear();
-        for (int y = isall ? 0 : key_y; y < height; y++)
-        {
-            var key = (key_x, y);
-            MatingBlock(key, matchblockdic, matching);
-        }
-        matchblocklist_y.AddRange(matching);
+        List<UI_Match_Block> matchblocklist_x = GetMatchList(true, key_x, key_y, isall ? 0 : key_x, width, matchblockdic);
+        List<UI_Match_Block> matchblocklist_y = GetMatchList(false, key_x, key_y, isall ? 0 : key_y, height, matchblockdic);
 
         //3개 이상이 아니면 매치가 되지 않은 것이기 때문에 Clear
         if (matchblocklist_x.Count <= 2)
