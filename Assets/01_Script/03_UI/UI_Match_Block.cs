@@ -128,7 +128,6 @@ public class UI_Match_Block : MonoBehaviour
         {
             return;
         }
-
         Destroy(this.gameObject);
         _mathcomplte_event?.Invoke(this);
     }

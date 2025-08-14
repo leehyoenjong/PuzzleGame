@@ -275,10 +275,10 @@ public class MatchFiledManager : MonoBehaviour
         if (_matchblockdic.TryGetValue((x, y), out var origin))
         {
             _matchblockdic[(x, y)] = block;
-        }
-        else
-        {
-            Debug.LogError($"이거는 에런데? : {x}_{y}");
+            if (Application.isEditor)
+            {
+                block.name = $"{x}_{y}";
+            }
         }
 
         var point = block.GetPoint();
@@ -287,6 +287,11 @@ public class MatchFiledManager : MonoBehaviour
             return;
         }
         _matchblockdic[(point.x, point.y)] = origin;
+
+        if (origin != null && Application.isEditor)
+        {
+            _matchblockdic[(point.x, point.y)].name = $"{x}_{y}";
+        }
     }
 
     void RemoveIDX(UI_Match_Block block)

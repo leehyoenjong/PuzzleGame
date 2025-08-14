@@ -29,3 +29,10 @@ public enum EGAMEOVERCONDITION
 {
     MOVECOUNT, //이동 횟수
 }
+
+public enum EMATCHING
+{
+    NONE,
+    ING,
+    STOP
+}
