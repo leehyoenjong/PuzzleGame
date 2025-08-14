@@ -98,7 +98,6 @@ public class MatchFiledManager : MonoBehaviour
             return;
         }
 
-        Debug.Log("생성 전 이동");
         //먼저 기존에 남아있던 블록 아래로 이동 
         await MoveMatchBlock(blockList);
 
@@ -110,7 +109,6 @@ public class MatchFiledManager : MonoBehaviour
             return;
         }
 
-        Debug.Log("생성 후 이동");
         //한번 더 생성된 것들 포함하여 이동 진행
         await MoveMatchBlock(createblockresult.blocklist);
         WaitAndMove();
@@ -218,7 +216,6 @@ public class MatchFiledManager : MonoBehaviour
         var movepoint = new Vector2(posx, posy);
         block.Setting(movepoint);
         block.ChangePoint(x, y, movepoint, true);
-        Debug.Log($"생성 완료 : {block.GetPoint()}");
     }
 
     //전체 이동
