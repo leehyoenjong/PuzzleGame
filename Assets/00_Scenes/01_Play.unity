@@ -815,13 +815,15 @@ MonoBehaviour:
   - _blocktypes: 1
     _blockobject: {fileID: 98446674714736265, guid: f7535fe37abbdd649a4e273bf72dd25a, type: 3}
   - _blocktypes: 2
-    _blockobject: {fileID: 3741280883373401796, guid: 66c1a57bde314fa4d93c4002bf7629cc, type: 3}
-  - _blocktypes: 3
-    _blockobject: {fileID: 6953593004293039301, guid: 4c70cb14856c80f4798d197a62548824, type: 3}
+    _blockobject: {fileID: 98446674714736265, guid: 6dab3c859197b4d93a8a3829fbd01cbc, type: 3}
   - _blocktypes: 4
-    _blockobject: {fileID: 2370478593260446260, guid: 79a3eafc59d602a4e8460a0fa6f87ee1, type: 3}
+    _blockobject: {fileID: 6953593004293039301, guid: 4c70cb14856c80f4798d197a62548824, type: 3}
   - _blocktypes: 5
+    _blockobject: {fileID: 2370478593260446260, guid: 79a3eafc59d602a4e8460a0fa6f87ee1, type: 3}
+  - _blocktypes: 6
     _blockobject: {fileID: 473226564770359074, guid: a94450d4e232d0742a511cc40a1ead50, type: 3}
+  - _blocktypes: 3
+    _blockobject: {fileID: 3741280883373401796, guid: 3756c2b6ddcfe400eadbd36c1586674c, type: 3}
 --- !u!4 &690075275
 Transform:
   m_ObjectHideFlags: 0

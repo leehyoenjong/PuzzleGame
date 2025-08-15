@@ -60,7 +60,8 @@ public class MatchManager : MonoBehaviour
         EBLOCKCOLORTYPE _color = EBLOCKCOLORTYPE.MAX;
         switch (matchtype)
         {
-            case EMATCHTYPE.FORE:
+            case EMATCHTYPE.FORE_UPDOWN:
+            case EMATCHTYPE.FORE_LEFTRIGHT:
             case EMATCHTYPE.FIVE:
                 var slotlist = x_list.Count > 0 ? x_list : y_list;
                 middlepoint = usermoveblock == null ? GetMiddlePoint(slotlist) : usermoveblock.GetPoint();
@@ -128,10 +129,9 @@ public class MatchManager : MonoBehaviour
             return EMATCHTYPE.CROSS_FIVE;
         }
 
-        if (x_list.Count == 4 || y_list.Count == 4)
-        {
-            return EMATCHTYPE.FORE;
-        }
+        if (x_list.Count == 4) return EMATCHTYPE.FORE_LEFTRIGHT;
+        if (y_list.Count == 4) return EMATCHTYPE.FORE_UPDOWN;
+
         if (x_list.Count == 5 || y_list.Count == 5)
         {
             return EMATCHTYPE.FIVE;
@@ -254,10 +254,11 @@ public class MatchManager : MonoBehaviour
         var distinctBlocksToDestroy = blocksToDestroy.Distinct().ToList();
 
         // 기존 특수 블록 효과 처리 (문제점 2 해결)
-        GetMatchTypeFuction(distinctBlocksToDestroy, matchblockdic);
+        var finalBlocksToDestroy = ProcessChainReaction(distinctBlocksToDestroy, matchblockdic);
+
 
         // --- 2단계: 파괴 ---
-        SetMatchBlock(distinctBlocksToDestroy, new List<UI_Match_Block>());
+        SetMatchBlock(finalBlocksToDestroy, new List<UI_Match_Block>());
 
         // --- 3단계: 생성 (문제점 1 해결) ---
         foreach (var req in creationRequests)
@@ -286,7 +287,8 @@ public class MatchManager : MonoBehaviour
         EBLOCKCOLORTYPE _color = EBLOCKCOLORTYPE.MAX;
         switch (matchtype)
         {
-            case EMATCHTYPE.FORE:
+            case EMATCHTYPE.FORE_LEFTRIGHT:
+            case EMATCHTYPE.FORE_UPDOWN:
             case EMATCHTYPE.FIVE:
                 var slotlist = x_list.Count > 0 ? x_list : y_list;
                 middlepoint = usermoveblock.GetPoint();
@@ -473,8 +475,8 @@ public class MatchManager : MonoBehaviour
             switch (blocktypes)
             {
                 //한줄 모두 파괴 
-                case EMATCHTYPE.FORE:
-                    breakblocklist.AddRange(SetForeMatch(i, breakblocklist, matchblockdic));
+                case EMATCHTYPE.FORE_UPDOWN:
+                    breakblocklist.AddRange(SetForeMatch(breakblocklist[i], matchblockdic));
                     isspecial = true;
                     break;
                 //같은 색상 모두 파괴
@@ -484,44 +486,98 @@ public class MatchManager : MonoBehaviour
                     break;
                 //3x3 파괴
                 case EMATCHTYPE.CROSS_THREE:
-                    breakblocklist.AddRange(Set_Corss_Match(-1, 2, breakblocklist, matchblockdic));
+                    breakblocklist.AddRange(Set_Corss_Match(-1, 2, breakblocklist[i], matchblockdic));
                     break;
                 //x,y한줄씩 파괴
                 case EMATCHTYPE.CROSS_FOUR:
-                    breakblocklist.AddRange(Set_Corss_Match(-3, 4, breakblocklist, matchblockdic));
+                    breakblocklist.AddRange(Set_Corss_Match(-3, 4, breakblocklist[i], matchblockdic));
                     break;
                 //전체 파괴
                 case EMATCHTYPE.CROSS_FIVE:
-                    breakblocklist.AddRange(Set_Corss_Match(-6, 7, breakblocklist, matchblockdic));
+                    breakblocklist.AddRange(Set_Corss_Match(-6, 7, breakblocklist[i], matchblockdic));
                     break;
             }
         }
         return isspecial;
     }
 
-    //4칸 매치
-    List<UI_Match_Block> SetForeMatch(int index, List<UI_Match_Block> blocklist, Dictionary<(int, int), UI_Match_Block> matchblockdic)
+    List<UI_Match_Block> ProcessChainReaction(List<UI_Match_Block> initialBlocks, Dictionary<(int, int), UI_Match_Block> matchblockdic)
     {
-        var breaklist = new List<UI_Match_Block>();
-        //x줄인지 y줄인지 확인
-        var currentBlock = blocklist[index];
-        var currentPoint = currentBlock.GetPoint();
+        var finalDestroyList = new HashSet<UI_Match_Block>(initialBlocks);
+        var processQueue = new Queue<(UI_Match_Block block, EBLOCKCOLORTYPE inheritedColor)>();
 
-        bool isXLine = false;
-        for (int j = 0; j < blocklist.Count; j++)
+        // 초기 블록들을 큐에 추가
+        foreach (var block in initialBlocks)
         {
-            if (index == j) continue;
-            var otherPoint = blocklist[j].GetPoint();
-
-            // x값이 다르면 x축 방향 라인
-            if (currentPoint.x != otherPoint.x)
+            if (IsSpecialBlock(block))
             {
-                isXLine = true;
-                break;
+                processQueue.Enqueue((block, block.GetBlockColorTypes()));
             }
         }
 
-        if (isXLine)
+        while (processQueue.Count > 0)
+        {
+            var (currentBlock, inheritedColor) = processQueue.Dequeue();
+            var blocksAffectedByEffect = new List<UI_Match_Block>();
+
+            switch (currentBlock.GetBlockMatchTypes())
+            {
+                case EMATCHTYPE.FORE_LEFTRIGHT:
+                case EMATCHTYPE.FORE_UPDOWN:
+                    blocksAffectedByEffect.AddRange(SetForeMatch(currentBlock, matchblockdic));
+                    break;
+                case EMATCHTYPE.FIVE:
+                    // FORE 블록에서 색상을 물려받았는지 확인
+                    var colorToMatch = inheritedColor != EBLOCKCOLORTYPE.FIVE ? inheritedColor : currentBlock.GetBlockColorTypes();
+                    if (colorToMatch == EBLOCKCOLORTYPE.FIVE)
+                    {
+                        // FIVE 블록이 다른 FIVE블록과 만나 파괴되는 경우,
+                        // 임의의 색상(예: RED)을 지정하거나 다른 규칙 필요. 여기서는 RED로 가정
+                        colorToMatch = EBLOCKCOLORTYPE.RED;
+                    }
+                    blocksAffectedByEffect.AddRange(SetFiveMatch(colorToMatch, matchblockdic));
+                    break;
+                case EMATCHTYPE.CROSS_THREE:
+                    blocksAffectedByEffect.AddRange(Set_Corss_Match(-1, 2, currentBlock, matchblockdic));
+                    break;
+                case EMATCHTYPE.CROSS_FOUR:
+                    blocksAffectedByEffect.AddRange(Set_Corss_Match(-3, 4, currentBlock, matchblockdic));
+                    break;
+                case EMATCHTYPE.CROSS_FIVE:
+                    blocksAffectedByEffect.AddRange(Set_Corss_Match(-6, 7, currentBlock, matchblockdic));
+                    break;
+            }
+
+            foreach (var affectedBlock in blocksAffectedByEffect)
+            {
+                // 아직 최종 파괴 목록에 없고, 큐에도 없는 새로운 특수 블록이라면
+                if (finalDestroyList.Contains(affectedBlock) == false && IsSpecialBlock(affectedBlock))
+                {
+                    // FIVE 블록을 위한 색상 상속
+                    var colorToInherit = currentBlock.GetBlockMatchTypes() == EMATCHTYPE.FIVE ? inheritedColor : affectedBlock.GetBlockColorTypes();
+                    processQueue.Enqueue((affectedBlock, colorToInherit));
+                }
+                finalDestroyList.Add(affectedBlock);
+            }
+        }
+        return finalDestroyList.ToList();
+    }
+
+    bool IsSpecialBlock(UI_Match_Block block)
+    {
+        var type = block.GetBlockMatchTypes();
+        return type != EMATCHTYPE.THREE;
+    }
+
+
+    //4칸 매치
+    List<UI_Match_Block> SetForeMatch(UI_Match_Block currentBlock, Dictionary<(int, int), UI_Match_Block> matchblockdic)
+    {
+        var breaklist = new List<UI_Match_Block>();
+        var currentPoint = currentBlock.GetPoint();
+        var blockType = currentBlock.GetBlockMatchTypes();
+
+        if (blockType == EMATCHTYPE.FORE_LEFTRIGHT)
         {
             // x축 방향 한줄 파괴 - 같은 y좌표의 모든 블록
             foreach (var block in matchblockdic)
@@ -532,7 +588,7 @@ public class MatchManager : MonoBehaviour
                 }
             }
         }
-        else
+        else // FORE_UPDOWN
         {
             // y축 방향 한줄 파괴 - 같은 x좌표의 모든 블록
             foreach (var block in matchblockdic)
@@ -553,10 +609,10 @@ public class MatchManager : MonoBehaviour
         return colorlist;
     }
 
-    List<UI_Match_Block> Set_Corss_Match(int startindex, int endindex, List<UI_Match_Block> boomblock, Dictionary<(int, int), UI_Match_Block> matchblockdic)
+    List<UI_Match_Block> Set_Corss_Match(int startindex, int endindex, UI_Match_Block boomblock, Dictionary<(int, int), UI_Match_Block> matchblockdic)
     {
         var breaklist = new List<UI_Match_Block>();
-        var point = GetMiddlePoint(boomblock);
+        var point = boomblock.GetPoint();
 
         for (int y = startindex; y < endindex; y++)
         {

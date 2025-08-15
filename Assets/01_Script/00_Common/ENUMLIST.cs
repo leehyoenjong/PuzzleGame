@@ -1,7 +1,8 @@
 public enum EMATCHTYPE
 {
     THREE,
-    FORE,
+    FORE_UPDOWN,
+    FORE_LEFTRIGHT,
     FIVE,
     CROSS_THREE,
     CROSS_FOUR,
