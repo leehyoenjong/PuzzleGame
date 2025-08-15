@@ -71,15 +71,6 @@ public class MatchFiledManager : MonoBehaviour
 
         //새롭게 생성해야할 블록이 있는지 체크
         var blockList = _matchblockdic.Values.Where(x => x != null).ToList();
-
-        var log = "남은 블록: X - ";
-
-        foreach (var item in blockList)
-        {
-            log += item.GetPoint() + ", ";
-        }
-        Debug.Log(log);
-
         if (blockList.Count == Width * Height)
         {
             //매치 가능한 블록이 있는지 체크

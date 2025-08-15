@@ -43,45 +43,25 @@ public class MatchManager : MonoBehaviour
     void MatchComplte(List<UI_Match_Block> x_list, List<UI_Match_Block> y_list)
     {
         var matchtype = GetMatchTypes(x_list, y_list);
+        if (matchtype == EMATCHTYPE.THREE)
+        {
+            SetMatchBlock(x_list, y_list);
+            return;
+        }
 
         (int x, int y) middlepoint = (0, 0);
-
         switch (matchtype)
         {
-            case EMATCHTYPE.THREE:
             case EMATCHTYPE.FORE:
             case EMATCHTYPE.FIVE:
                 var slotlist = x_list.Count > 0 ? x_list : y_list;
                 middlepoint = GetMiddlePoint(slotlist);
-                if (middlepoint.Item1 == -1)
-                {
-                    Debug.LogError("이건 아니지나??");
-                }
                 break;
             case EMATCHTYPE.CROSS_THREE:
             case EMATCHTYPE.CROSS_FOUR:
             case EMATCHTYPE.CROSS_FIVE:
                 middlepoint = GetMiddlePoint(x_list, y_list);
-                if (middlepoint.Item1 == -1)
-                {
-                    Debug.LogError("이건 아니지나??");
-                }
                 break;
-        }
-
-        if (x_list.Count > 0 || y_list.Count > 0)
-        {
-            string log = "삭제 목록: \nX : ";
-            foreach (var item in x_list)
-            {
-                log += item.GetPoint() + $"_{item.GetBlockColorTypes()}" + ", ";
-            }
-            log += "nY : ";
-            foreach (var item in y_list)
-            {
-                log += item.GetPoint() + $"_{item.GetBlockColorTypes()}" + ", ";
-            }
-            Debug.Log(log);
         }
         SetMatchBlock(x_list, y_list);
         _match_complte_createblock_event?.Invoke(middlepoint.Item1, middlepoint.Item2, matchtype);
@@ -120,7 +100,7 @@ public class MatchManager : MonoBehaviour
         {
             return commonSlot.GetPoint();
         }
-        return (-1, -1); // Or handle as an error/exception
+        return (-1, -1);
     }
 
     EMATCHTYPE GetMatchTypes(List<UI_Match_Block> x_list, List<UI_Match_Block> y_list)
