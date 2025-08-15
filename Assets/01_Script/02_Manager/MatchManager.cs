@@ -400,10 +400,10 @@ public class MatchManager : MonoBehaviour
                     breakblocklist.AddRange(SetForeMatch(i, breakblocklist, matchblockdic));
                     isspecial = true;
                     break;
-                    // //같은 색상 모두 파괴
-                    // case EMATCHTYPE.FIVE:
-                    //     breakblocklist.AddRange(SetForeMatch(i, blocklist, matchblockdic));
-                    //     break;
+                //같은 색상 모두 파괴
+                case EMATCHTYPE.FIVE:
+                    breakblocklist.AddRange(SetFiveMatch(breakblocklist[i].GetBlockColorTypes(), matchblockdic));
+                    break;
                     // //3x3 파괴
                     // case EMATCHTYPE.CROSS_THREE:
                     //     breakblocklist.AddRange(SetForeMatch(i, blocklist, matchblockdic));
@@ -467,5 +467,11 @@ public class MatchManager : MonoBehaviour
         }
 
         return breaklist;
+    }
+
+    List<UI_Match_Block> SetFiveMatch(EBLOCKCOLORTYPE colortpye, Dictionary<(int, int), UI_Match_Block> matchblockdic)
+    {
+        var colorlist = matchblockdic.Where(x => x.Value != null).Where(x => x.Value.GetBlockColorTypes() == colortpye).Select(x => x.Value).ToList();
+        return colorlist;
     }
 }
