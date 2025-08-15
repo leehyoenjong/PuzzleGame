@@ -10,20 +10,20 @@ public class MatchFiledManager : MonoBehaviour
     [SerializeField] int Width;
     [SerializeField] int Height;
     [SerializeField] GameObject _matchslot;
-    [SerializeField] GameObject[] _matchblock;
     [SerializeField] Transform _slotparent;
     [SerializeField] Transform _blockparent;
 
     Dictionary<(int x, int y), UI_Match_Slot> _matchslotdic = new Dictionary<(int, int), UI_Match_Slot>();
     Dictionary<(int x, int y), UI_Match_Block> _matchblockdic = new Dictionary<(int, int), UI_Match_Block>();
 
-    public static event Action<Dictionary<(int, int), UI_Match_Block>, int, int> _match_complte_event;//매치 성공 이벤트 
+    public static event Func<Dictionary<(int, int), UI_Match_Block>, int, int, bool> _match_complte_event;//매치 성공 이벤트 
     public static event Func<Dictionary<(int, int), UI_Match_Block>, int, int, bool> _matchsimuration_check_event;//매치 시뮬레이션 체크 이벤트
     public static event Action<Dictionary<(int, int), UI_Match_Block>, UI_Match_Block, UI_Match_Block, int, int> _block_move_event;//이동 진행시 이벤트
 
     public static List<Func<bool>> _match_setting_check_list = new List<Func<bool>>();//블록 생성, 이동와 같은 것들을 진행해도 되는지 체크하는 이벤트
     public static event Action _no_match_block_event;//매치되는 블록 없을때 이벤트
     public static event Action _replay_complte_event;//모든 준비가 완료되었고 이제 시작해도 될때
+    public static event Func<EMATCHTYPE, Transform, UI_Match_Block> _block_create_event;
 
     float _slotsize;//슬롯 사이즈 캐싱
     bool _issetting;//셋팅중인지 체크하는 변수
@@ -161,7 +161,6 @@ public class MatchFiledManager : MonoBehaviour
         }
 
         var blocklist = new List<UI_Match_Block>();
-        int basicblockindx = (int)EMATCHTYPE.THREE;
         int newblockcount = 0;
         for (int y = 0; y < Height; y++)
         {
@@ -177,9 +176,7 @@ public class MatchFiledManager : MonoBehaviour
                 var toppointkey = (x, 0);
 
                 //최상위 위쪽에다 블록 생성
-                var blockobject = Instantiate(_matchblock[basicblockindx], _blockparent);
-                var block = blockobject.GetComponent<UI_Match_Block>();
-
+                var block = _block_create_event.Invoke(EMATCHTYPE.THREE, _blockparent);
                 var createpoint = toppoint[toppointkey].GetPos() + new Vector2(0, 150);
                 block.Setting(createpoint);
                 blocklist.Add(block);
@@ -202,12 +199,12 @@ public class MatchFiledManager : MonoBehaviour
         float posx = startX + x * _slotsize;
         float posy = startY - y * _slotsize;
 
-        var blockobject = Instantiate(_matchblock[(int)matchtype], _blockparent);
-        var block = blockobject.GetComponent<UI_Match_Block>();
+        var block = _block_create_event.Invoke(matchtype, _blockparent);
         var movepoint = new Vector2(posx, posy);
         block.Setting(movepoint);
         block.ChangePoint(x, y, movepoint, true);
         block.SettingColorTypes(colortypes);
+        Debug.Log($"생성되는 위치 : {movepoint} _ 종류 타입 : {matchtype} _ 색 타입 : {colortypes}");
     }
 
     //전체 이동
@@ -233,7 +230,7 @@ public class MatchFiledManager : MonoBehaviour
         }
 
         //y값이 낮은 순으로 정렬
-        blocklist.Sort((a, b) => a.GetPos().y.CompareTo(b.GetPos().y));
+        blocklist.Sort((a, b) => b.GetPoint().y.CompareTo(a.GetPoint().y));
 
         int movecount = 0;
 
@@ -253,7 +250,7 @@ public class MatchFiledManager : MonoBehaviour
                 var targetpos = _matchslotdic[key].GetPos();
 
                 //blocklist가 x값은 같고 y값은 큰값만 가져올 것
-                var block = blocklist.FirstOrDefault(x => x != null && x.GetPos().x == targetpos.x && x.GetPoint().y < key.y);
+                var block = blocklist.FirstOrDefault(x => x != null && x.GetPos().x == targetpos.x && x.GetMoveController().CheckMoving() == false && x.GetPoint().y < key.y);
                 if (block == null || block == default)
                 {
                     continue;
@@ -310,6 +307,7 @@ public class MatchFiledManager : MonoBehaviour
 
     void RemoveIDX(UI_Match_Block block)
     {
+        Debug.Log($"리셋 번호 :{block.GetPoint()}");
         _matchblockdic[block.GetPoint()] = null;
     }
 }

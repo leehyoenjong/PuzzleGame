@@ -13,7 +13,7 @@ public class UI_Match_Block : MonoBehaviour
 
     [Header("블록 타입")]
     [SerializeField] EMATCHTYPE _blocktype;
-    public EMATCHTYPE GetBlockTypes() => _blocktype;
+    public EMATCHTYPE GetBlockMatchTypes() => _blocktype;
 
     [Header("점수")]
     [SerializeField] int _score;
@@ -46,7 +46,6 @@ public class UI_Match_Block : MonoBehaviour
 
     public void Setting(Vector2 createpos)
     {
-        ResetPoint();
         _rt.anchoredPosition = createpos;
         SettingColorTypes();
     }
@@ -134,7 +133,6 @@ public class UI_Match_Block : MonoBehaviour
         {
             return;
         }
-        Destroy(this.gameObject);
         _mathcomplte_event?.Invoke(this);
     }
 

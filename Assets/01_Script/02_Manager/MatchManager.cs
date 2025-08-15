@@ -6,6 +6,13 @@ using Unity.Burst.Intrinsics;
 using Unity.Collections;
 using UnityEngine;
 
+public struct SpecialBlockCreationRequest
+{
+    public (int x, int y) Point;
+    public EMATCHTYPE Type;
+    public EBLOCKCOLORTYPE Color;
+}
+
 public class MatchManager : MonoBehaviour
 {
     public static event Action<int, int, EMATCHTYPE, EBLOCKCOLORTYPE> _match_complte_createblock_event;//매치 성공 후 생성되는 개별 블록 이벤트 
@@ -69,21 +76,19 @@ public class MatchManager : MonoBehaviour
         SetMatchBlock(x_list, y_list);
 
         //특수블록으로 제거했을땐 블록이 생성되지 않도록 수정
+        Debug.Log($"생성하려는 블록의 위치:{middlepoint}");
         _match_complte_createblock_event?.Invoke(middlepoint.x, middlepoint.y, matchtype, _color);
     }
 
     void SetMatchBlock(List<UI_Match_Block> xlist, List<UI_Match_Block> ylist)
     {
-        //매치된 블럭들 처리하기
-        for (int i = 0; i < xlist.Count; i++)
-        {
-            var point = xlist[i].GetPoint();
-            _match_complte_block_event?.Invoke(point.x, point.y);
-        }
+        xlist.AddRange(ylist);
+        var total = xlist.Distinct().ToList();
 
-        for (int i = 0; i < ylist.Count; i++)
+        //매치된 블럭들 처리하기
+        for (int i = 0; i < total.Count; i++)
         {
-            var point = ylist[i].GetPoint();
+            var point = total[i].GetPoint();
             _match_complte_block_event?.Invoke(point.x, point.y);
         }
     }
@@ -135,12 +140,16 @@ public class MatchManager : MonoBehaviour
         return EMATCHTYPE.THREE;
     }
 
-    void AllBlockMatch(Dictionary<(int, int), UI_Match_Block> matchblockdic, int width, int height)
+    bool AllBlockMatch(Dictionary<(int, int), UI_Match_Block> matchblockdic, int width, int height)
     {
+        bool successmatch = false;
         _ismatching = true;
         //블록이 아닌 슬롯의 정보를 저장하여 위치값 계산할 예정
         var maxcount = matchblockdic.Count;
         int key_y = 0;
+
+        List<UI_Match_Block> xlist = new List<UI_Match_Block>();
+        List<UI_Match_Block> ylist = new List<UI_Match_Block>();
         int key_x = 0;
 
         for (int i = 0; i < maxcount; i++)
@@ -155,8 +164,11 @@ public class MatchManager : MonoBehaviour
                 GetMatchTypeFuction(matchresult.matchblocklist_y, matchblockdic);
 
                 //매칭 성공하면 위치는 고정하고 매칭 성공 처리 진행
-                MatchComplte(matchresult.matchblocklist_x, matchresult.matchblocklist_y);
+                xlist.AddRange(matchresult.matchblocklist_x);
+                ylist.AddRange(matchresult.matchblocklist_y);
+
                 //매치를 성공하고도 return하지 않는 이유는 모든 블록 매치를 체크해야하기 때문
+                successmatch = true;
             }
 
             //매치 실패 시 다음 칸으로 이동
@@ -168,7 +180,9 @@ public class MatchManager : MonoBehaviour
                 key_y++;
             }
         }
+        MatchComplte(xlist.Distinct().ToList(), ylist.Distinct().ToList());
         _ismatching = false;
+        return successmatch;
     }
 
     /// <summary>
@@ -185,7 +199,7 @@ public class MatchManager : MonoBehaviour
 
         pointdown.Swap(pointenter);
 
-        await UniTask.WaitForSeconds(0.25f, cancellationToken: this.GetCancellationTokenOnDestroy());
+        await UniTask.WaitForSeconds(0.4f, cancellationToken: this.GetCancellationTokenOnDestroy());
 
         //색상 공략 5매치 일 경우 처리
         if (pointdown.GetBlockColorTypes() == EBLOCKCOLORTYPE.FIVE || pointenter.GetBlockColorTypes() == EBLOCKCOLORTYPE.FIVE)
@@ -205,40 +219,88 @@ public class MatchManager : MonoBehaviour
 
         var matchresult = GetMatchBlock(downpoint.x, downpoint.y, width, height, matchblockdic, true);
         var downpointcheck = matchresult.matchblocklist_x.Count >= 3 || matchresult.matchblocklist_y.Count >= 3;
-        //매치 성공
-        if (downpointcheck)
-        {
-            //타입별 매칭 처리
-            GetMatchTypeFuction(matchresult.matchblocklist_x, matchblockdic);
-            GetMatchTypeFuction(matchresult.matchblocklist_y, matchblockdic);
-        }
 
         var matchresult_enter = GetMatchBlock(enterpoint.x, enterpoint.y, width, height, matchblockdic, true);
         var entercheck = matchresult_enter.matchblocklist_x.Count >= 3 || matchresult_enter.matchblocklist_y.Count >= 3;
-        if (entercheck)
-        {
-            //타입별 매칭 처리
-            GetMatchTypeFuction(matchresult_enter.matchblocklist_x, matchblockdic);
-            GetMatchTypeFuction(matchresult_enter.matchblocklist_y, matchblockdic);
-        }
 
-        matchresult_enter.matchblocklist_x.AddRange(matchresult.matchblocklist_x);
-        var totalx = matchresult_enter.matchblocklist_x.Distinct().ToList();
-        matchresult_enter.matchblocklist_y.AddRange(matchresult.matchblocklist_y);
-        var totaly = matchresult_enter.matchblocklist_y.Distinct().ToList();
-        MatchComplte(totalx, totaly, pointenter);
-        //매칭 성공 시 원상복구 막기 
-        if (downpointcheck || entercheck)
+        // 매치가 전혀 없으면 원위치하고 종료
+        if (downpointcheck == false && entercheck == false)
         {
-            _user_move_match_complte?.Invoke();
+            pointdown.ChangePoint(downpoint.x, downpoint.y, downpos);
+            pointenter.ChangePoint(enterpoint.x, enterpoint.y, enterpos);
             _ismatching = false;
             return;
         }
 
-        //매칭 실패 시 원상복구
-        pointdown.ChangePoint(downpoint.x, downpoint.y, downpos);
-        pointenter.ChangePoint(enterpoint.x, enterpoint.y, enterpos);
+        // --- 1단계: 분석 (정보 수집) ---
+        var creationRequests = new List<SpecialBlockCreationRequest>();
+        if (downpointcheck)
+        {
+            var request = GetSpecialBlockCreationRequest(matchresult.matchblocklist_x, matchresult.matchblocklist_y, pointenter);
+            if (request.HasValue) creationRequests.Add(request.Value);
+        }
+        if (entercheck)
+        {
+            var request = GetSpecialBlockCreationRequest(matchresult_enter.matchblocklist_x, matchresult_enter.matchblocklist_y, pointdown);
+            if (request.HasValue) creationRequests.Add(request.Value);
+        }
+
+        var blocksToDestroy = new List<UI_Match_Block>();
+        blocksToDestroy.AddRange(matchresult.matchblocklist_x);
+        blocksToDestroy.AddRange(matchresult.matchblocklist_y);
+        blocksToDestroy.AddRange(matchresult_enter.matchblocklist_x);
+        blocksToDestroy.AddRange(matchresult_enter.matchblocklist_y);
+
+        var distinctBlocksToDestroy = blocksToDestroy.Distinct().ToList();
+
+        // 기존 특수 블록 효과 처리 (문제점 2 해결)
+        GetMatchTypeFuction(distinctBlocksToDestroy, matchblockdic);
+
+        // --- 2단계: 파괴 ---
+        SetMatchBlock(distinctBlocksToDestroy, new List<UI_Match_Block>());
+
+        // --- 3단계: 생성 (문제점 1 해결) ---
+        foreach (var req in creationRequests)
+        {
+            _match_complte_createblock_event?.Invoke(req.Point.x, req.Point.y, req.Type, req.Color);
+        }
+
+        // 최종 처리
+        _user_move_match_complte?.Invoke();
         _ismatching = false;
+    }
+
+    /// <summary>
+    /// 매치 그룹을 평가해서 생성할 특수 블록 정보를 반환하는 함수
+    /// </summary>
+    SpecialBlockCreationRequest? GetSpecialBlockCreationRequest(List<UI_Match_Block> x_list, List<UI_Match_Block> y_list, UI_Match_Block usermoveblock)
+    {
+        var matchtype = GetMatchTypes(x_list, y_list);
+        if (matchtype == EMATCHTYPE.THREE)
+        {
+            // 3매치는 특수 블록을 생성하지 않음
+            return null;
+        }
+
+        (int x, int y) middlepoint = (0, 0);
+        EBLOCKCOLORTYPE _color = EBLOCKCOLORTYPE.MAX;
+        switch (matchtype)
+        {
+            case EMATCHTYPE.FORE:
+            case EMATCHTYPE.FIVE:
+                var slotlist = x_list.Count > 0 ? x_list : y_list;
+                middlepoint = usermoveblock.GetPoint();
+                _color = matchtype == EMATCHTYPE.FIVE ? EBLOCKCOLORTYPE.FIVE : slotlist[0].GetBlockColorTypes();
+                break;
+            case EMATCHTYPE.CROSS_THREE:
+            case EMATCHTYPE.CROSS_FOUR:
+            case EMATCHTYPE.CROSS_FIVE:
+                middlepoint = usermoveblock.GetPoint();
+                _color = x_list[0].GetBlockColorTypes();
+                break;
+        }
+
+        return new SpecialBlockCreationRequest { Point = middlepoint, Type = matchtype, Color = _color };
     }
 
     bool SimulationBlockMatch(Dictionary<(int, int), UI_Match_Block> matchblockdic, int width, int height)
@@ -407,7 +469,7 @@ public class MatchManager : MonoBehaviour
         var maxcount = breakblocklist.Count;
         for (int i = 0; i < maxcount; i++)
         {
-            var blocktypes = breakblocklist[i].GetBlockTypes();
+            var blocktypes = breakblocklist[i].GetBlockMatchTypes();
             switch (blocktypes)
             {
                 //한줄 모두 파괴 
