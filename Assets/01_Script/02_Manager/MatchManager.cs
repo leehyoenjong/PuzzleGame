@@ -40,7 +40,7 @@ public class MatchManager : MonoBehaviour
         MatchFiledManager._matchsimuration_check_event -= SimulationBlockMatch;
     }
 
-    void MatchComplte(List<UI_Match_Block> x_list, List<UI_Match_Block> y_list, bool isspecial)
+    void MatchComplte(List<UI_Match_Block> x_list, List<UI_Match_Block> y_list, bool isspecial, UI_Match_Block usermoveblock = null)
     {
         var matchtype = GetMatchTypes(x_list, y_list);
         if (matchtype == EMATCHTYPE.THREE)
@@ -56,13 +56,13 @@ public class MatchManager : MonoBehaviour
             case EMATCHTYPE.FORE:
             case EMATCHTYPE.FIVE:
                 var slotlist = x_list.Count > 0 ? x_list : y_list;
-                middlepoint = GetMiddlePoint(slotlist);
+                middlepoint = usermoveblock == null ? GetMiddlePoint(slotlist) : usermoveblock.GetPoint();
                 _color = slotlist[0].GetBlockColorTypes();
                 break;
             case EMATCHTYPE.CROSS_THREE:
             case EMATCHTYPE.CROSS_FOUR:
             case EMATCHTYPE.CROSS_FIVE:
-                middlepoint = GetMiddlePoint(x_list, y_list);
+                middlepoint = usermoveblock == null ? GetMiddlePoint(x_list, y_list) : usermoveblock.GetPoint();
                 _color = x_list[0].GetBlockColorTypes();
                 break;
         }
@@ -198,7 +198,7 @@ public class MatchManager : MonoBehaviour
             var checkspecial = GetMatchTypeFuction(matchresult.matchblocklist_x, matchblockdic) || GetMatchTypeFuction(matchresult.matchblocklist_y, matchblockdic);
 
             //매칭 성공하면 위치는 고정하고 매칭 성공 처리 진행
-            MatchComplte(matchresult.matchblocklist_x, matchresult.matchblocklist_y, checkspecial);
+            MatchComplte(matchresult.matchblocklist_x, matchresult.matchblocklist_y, checkspecial, pointenter);
         }
 
         var matchresult_enter = GetMatchBlock(enterpoint.x, enterpoint.y, width, height, matchblockdic, true);
@@ -209,7 +209,7 @@ public class MatchManager : MonoBehaviour
             var checkspecial = GetMatchTypeFuction(matchresult_enter.matchblocklist_x, matchblockdic) || GetMatchTypeFuction(matchresult_enter.matchblocklist_y, matchblockdic);
 
             //매칭 성공하면 위치는 고정하고 매칭 성공 처리 진행
-            MatchComplte(matchresult_enter.matchblocklist_x, matchresult_enter.matchblocklist_y, checkspecial);
+            MatchComplte(matchresult_enter.matchblocklist_x, matchresult_enter.matchblocklist_y, checkspecial, pointdown);
         }
 
         //매칭 성공 시 원상복구 막기 
