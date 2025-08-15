@@ -6,8 +6,8 @@ using UnityEngine;
 
 public class MatchFiledManager : MonoBehaviour
 {
-    [SerializeField] int Width;
-    [SerializeField] int Height;
+    [SerializeField] int _width;
+    [SerializeField] int _height;
     [SerializeField] GameObject _matchslot;
     [SerializeField] Transform _slotparent;
     [SerializeField] Transform _blockparent;
@@ -56,7 +56,7 @@ public class MatchFiledManager : MonoBehaviour
     async UniTaskVoid Setting()
     {
         _issetting = true;
-        SettingSlotSize();
+        SettingSlotSizeAndWidthHieght();
         CreateMatchSlot();
         var createblockresult = CreateMatchBlock();
         await MoveMatchBlock(createblockresult.blocklist);
@@ -71,10 +71,10 @@ public class MatchFiledManager : MonoBehaviour
 
         //새롭게 생성해야할 블록이 있는지 체크
         var blockList = _matchblockdic.Values.Where(x => x != null).ToList();
-        if (blockList.Count == Width * Height)
+        if (blockList.Count == _filedManager.GetMapData().Count)
         {
             //매치 가능한 블록이 있는지 체크
-            var checksimurationmatchblock = (bool)_matchsimuration_check_event?.Invoke(_matchblockdic, Width, Height);
+            var checksimurationmatchblock = (bool)_matchsimuration_check_event?.Invoke(_matchblockdic, _width, _height);
 
             //매치 가능한 블록이 없다면
             if (checksimurationmatchblock == false)
@@ -105,26 +105,29 @@ public class MatchFiledManager : MonoBehaviour
         WaitAndMove();
     }
 
-    void SettingSlotSize()
+    void SettingSlotSizeAndWidthHieght()
     {
         // _matchslot의 사이즈를 가져오기
         var slotRectTransform = _matchslot.GetComponent<RectTransform>();
         _slotsize = slotRectTransform.sizeDelta.x;
+
+        _width = _filedManager.GetWidth();
+        _height = _filedManager.GetHeight();
     }
 
     void CreateMatchSlot()
     {
         // 전체 그리드의 중앙점 계산
-        var totalWidth = (Width - 1) * _slotsize;
-        var totalHeight = (Height - 1) * _slotsize;
+        var totalWidth = (_width - 1) * _slotsize;
+        var totalHeight = (_height - 1) * _slotsize;
         var startX = -totalWidth / 2f;
         var startY = totalHeight / 2f;
 
-        for (int y = 0; y < Height; y++)
+        for (int y = 0; y < _height; y++)
         {
-            for (int x = 0; x < Width; x++)
+            for (int x = 0; x < _width; x++)
             {
-                if (_filedManager.GetMapData().Contains((x, y)) == false)
+                if (_filedManager.CheckMap((x, y)) == false)
                 {
                     continue;
                 }
@@ -159,26 +162,31 @@ public class MatchFiledManager : MonoBehaviour
     {
         //최상위 위치의 슬롯
         var toppoint = new Dictionary<(int, int), UI_Match_Slot>();
-        for (int i = 0; i < Width; i++)
+        for (int i = 0; i < _width; i++)
         {
-            var key = (i, 0);
+            var key = (i, _filedManager.GetTopSlotXY()[i]);
             toppoint.Add(key, _matchslotdic[key]);
         }
 
         var blocklist = new List<UI_Match_Block>();
         int newblockcount = 0;
-        for (int y = 0; y < Height; y++)
+        for (int y = 0; y < _height; y++)
         {
-            for (int x = 0; x < Width; x++)
+            for (int x = 0; x < _width; x++)
             {
                 var key = (x, y);
+                if (_filedManager.CheckMap(key) == false)
+                {
+                    continue;
+                }
+
                 if (_matchblockdic.ContainsKey(key) && _matchblockdic[key] != null)
                 {
                     blocklist.Add(_matchblockdic[key]);
                     continue;
                 }
                 //최상위 위에서 생성되서 내려오도록 할 예정
-                var toppointkey = (x, 0);
+                var toppointkey = (x, _filedManager.GetTopSlotXY()[x]);
 
                 //최상위 위쪽에다 블록 생성
                 var block = _block_create_event.Invoke(EMATCHTYPE.THREE, _blockparent);
@@ -195,8 +203,8 @@ public class MatchFiledManager : MonoBehaviour
     void CreateMatchBlock(int x, int y, EMATCHTYPE matchtype, EBLOCKCOLORTYPE colortypes)
     {
         // 전체 그리드의 중앙점 계산
-        var totalWidth = (Width - 1) * _slotsize;
-        var totalHeight = (Height - 1) * _slotsize;
+        var totalWidth = (_width - 1) * _slotsize;
+        var totalHeight = (_height - 1) * _slotsize;
         var startX = -totalWidth / 2f;
         var startY = totalHeight / 2f;
 
@@ -215,14 +223,14 @@ public class MatchFiledManager : MonoBehaviour
     async void WaitAndMove()
     {
         await UniTask.WaitForSeconds(0.25f, cancellationToken: this.GetCancellationTokenOnDestroy());
-        _match_complte_event?.Invoke(_matchblockdic, Width, Height);
+        _match_complte_event?.Invoke(_matchblockdic, _width, _height);
         FiledReSetting().Forget();
     }
 
     //개별 이동
     void WaitAndMove(UI_Match_Block pointdownblock, UI_Match_Block enterblock)
     {
-        _block_move_event?.Invoke(_matchblockdic, pointdownblock, enterblock, Width, Height);
+        _block_move_event?.Invoke(_matchblockdic, pointdownblock, enterblock, _width, _height);
         FiledReSetting().Forget();
     }
 
@@ -238,12 +246,17 @@ public class MatchFiledManager : MonoBehaviour
 
         int movecount = 0;
 
-        for (int y = Height - 1; y >= 0; y--)
+        for (int y = _height - 1; y >= 0; y--)
         {
             movecount = 0;
-            for (int x = 0; x < Width; x++)
+            for (int x = 0; x < _width; x++)
             {
                 var key = (x, y);
+                if (_filedManager.CheckMap(key) == false)
+                {
+                    continue;
+                }
+
                 //밑에서부터 체크하기 때문에 블록이 있다면 밑에 자리가 있는 것이기에 continue
                 if (_matchblockdic.ContainsKey(key) && _matchblockdic[key] != null)
                 {

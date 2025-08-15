@@ -145,12 +145,12 @@ public class MatchManager : MonoBehaviour
         bool successmatch = false;
         _ismatching = true;
         //블록이 아닌 슬롯의 정보를 저장하여 위치값 계산할 예정
-        var maxcount = matchblockdic.Count;
+        var maxcount = width * height;
         int key_y = 0;
+        int key_x = 0;
 
         List<UI_Match_Block> xlist = new List<UI_Match_Block>();
         List<UI_Match_Block> ylist = new List<UI_Match_Block>();
-        int key_x = 0;
 
         for (int i = 0; i < maxcount; i++)
         {
@@ -320,7 +320,10 @@ public class MatchManager : MonoBehaviour
         {
             for (int point = 0; point < simurationcount; point++)
             {
-                var origin = matchblockdic[(key_x, key_y)];
+                if (matchblockdic.TryGetValue((key_x, key_y), out var origin) == false)
+                {
+                    continue;
+                }
 
                 var nextkeyx = key_x + simurationkeylist[point].x;
                 var nextkeyy = key_y + simurationkeylist[point].y;
@@ -363,6 +366,11 @@ public class MatchManager : MonoBehaviour
 
     EMATCHING MatingBlock((int x, int y) key, bool max, Dictionary<(int, int), UI_Match_Block> matchblockdic, List<UI_Match_Block> matching)
     {
+        if (matchblockdic.ContainsKey(key) == false)
+        {
+            return max ? EMATCHING.MAX_MATCHEND : EMATCHING.NONE_SLOT;
+        }
+
         if (matchblockdic[key] == null)
         {
             return EMATCHING.STOP;
@@ -411,6 +419,15 @@ public class MatchManager : MonoBehaviour
 
             var checkmaxindex = i == maxcount - 1;
             var state = MatingBlock(key, checkmaxindex, matchblockdic, matching);
+
+            if (state == EMATCHING.NONE_SLOT)
+            {
+                if (matching.Count >= 3)
+                {
+                    matchblocklist.AddRange(matching.GetRange(0, matching.Count));
+                }
+                matching.Clear();
+            }
 
             if (checkmaxindex && matching.Count >= 3)
             {

@@ -260,9 +260,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86383006d1c474a4d8522d003d482507, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _width: 0
+  _height: 0
   _matchslot: {fileID: 8113716226079870034, guid: 6f93dc35d0c9f8241a959457441f5b9f, type: 3}
   _slotparent: {fileID: 1815868277}
   _blockparent: {fileID: 234646230}
+  _filedManager: {fileID: 141673984}
 --- !u!114 &141673978
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -46,6 +46,14 @@ public class BlockControllerManager : MonoBehaviour
         {
             return;
         }
+        var checkx = Mathf.Abs(_point_down_block.GetPoint().x - enterblock.GetPoint().x) >= 2;
+        var checky = Mathf.Abs(_point_down_block.GetPoint().y - enterblock.GetPoint().y) >= 2;
+        if (checkx || checky)
+        {
+            _point_down_block = null;
+            return;
+        }
+
         _move_block_event?.Invoke(_point_down_block, enterblock);
         _point_down_block = null;
     }
