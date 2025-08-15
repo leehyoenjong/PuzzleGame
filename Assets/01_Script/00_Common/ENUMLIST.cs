@@ -16,7 +16,10 @@ public enum EBLOCKCOLORTYPE
     YELLOW,
     PINK,
     GREEN,
-    MAX
+    MAX,
+
+    //여기서 부턴 특수 타입
+    FIVE
 }
 
 public enum EGAMECLEARCONDITION

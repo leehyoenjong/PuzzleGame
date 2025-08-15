@@ -40,7 +40,7 @@ public class MatchManager : MonoBehaviour
         MatchFiledManager._matchsimuration_check_event -= SimulationBlockMatch;
     }
 
-    void MatchComplte(List<UI_Match_Block> x_list, List<UI_Match_Block> y_list, bool isspecial, UI_Match_Block usermoveblock = null)
+    void MatchComplte(List<UI_Match_Block> x_list, List<UI_Match_Block> y_list, UI_Match_Block usermoveblock = null)
     {
         var matchtype = GetMatchTypes(x_list, y_list);
         if (matchtype == EMATCHTYPE.THREE)
@@ -57,7 +57,7 @@ public class MatchManager : MonoBehaviour
             case EMATCHTYPE.FIVE:
                 var slotlist = x_list.Count > 0 ? x_list : y_list;
                 middlepoint = usermoveblock == null ? GetMiddlePoint(slotlist) : usermoveblock.GetPoint();
-                _color = slotlist[0].GetBlockColorTypes();
+                _color = matchtype == EMATCHTYPE.FIVE ? EBLOCKCOLORTYPE.FIVE : slotlist[0].GetBlockColorTypes();
                 break;
             case EMATCHTYPE.CROSS_THREE:
             case EMATCHTYPE.CROSS_FOUR:
@@ -69,10 +69,7 @@ public class MatchManager : MonoBehaviour
         SetMatchBlock(x_list, y_list);
 
         //특수블록으로 제거했을땐 블록이 생성되지 않도록 수정
-        if (isspecial == false)
-        {
-            _match_complte_createblock_event?.Invoke(middlepoint.Item1, middlepoint.Item2, matchtype, _color);
-        }
+        _match_complte_createblock_event?.Invoke(middlepoint.x, middlepoint.y, matchtype, _color);
     }
 
     void SetMatchBlock(List<UI_Match_Block> xlist, List<UI_Match_Block> ylist)
@@ -91,7 +88,7 @@ public class MatchManager : MonoBehaviour
         }
     }
 
-    (int, int) GetMiddlePoint(List<UI_Match_Block> slotlist)
+    (int x, int y) GetMiddlePoint(List<UI_Match_Block> slotlist)
     {
         var xmax = slotlist.Max(x => x.GetPoint().x);
         var xmin = slotlist.Min(x => x.GetPoint().x);
@@ -101,7 +98,7 @@ public class MatchManager : MonoBehaviour
         return (Mathf.RoundToInt((xmin + xmax) * 0.5f), Mathf.RoundToInt((ymin + ymax) * 0.5f));
     }
 
-    (int, int) GetMiddlePoint(List<UI_Match_Block> xslotlist, List<UI_Match_Block> yslotlist)
+    (int x, int y) GetMiddlePoint(List<UI_Match_Block> xslotlist, List<UI_Match_Block> yslotlist)
     {
         var commonSlot = xslotlist.Intersect(yslotlist).FirstOrDefault();
         if (commonSlot != null)
@@ -154,10 +151,11 @@ public class MatchManager : MonoBehaviour
             if (matchresult.matchblocklist_x.Count >= 3 || matchresult.matchblocklist_y.Count >= 3)
             {
                 //타입별 매칭 처리
-                var checkspecial = GetMatchTypeFuction(matchresult.matchblocklist_x, matchblockdic) || GetMatchTypeFuction(matchresult.matchblocklist_y, matchblockdic);
+                GetMatchTypeFuction(matchresult.matchblocklist_x, matchblockdic);
+                GetMatchTypeFuction(matchresult.matchblocklist_y, matchblockdic);
 
                 //매칭 성공하면 위치는 고정하고 매칭 성공 처리 진행
-                MatchComplte(matchresult.matchblocklist_x, matchresult.matchblocklist_y, checkspecial);
+                MatchComplte(matchresult.matchblocklist_x, matchresult.matchblocklist_y);
                 //매치를 성공하고도 return하지 않는 이유는 모든 블록 매치를 체크해야하기 때문
             }
 
@@ -189,16 +187,30 @@ public class MatchManager : MonoBehaviour
 
         await UniTask.WaitForSeconds(0.25f, cancellationToken: this.GetCancellationTokenOnDestroy());
 
+        //색상 공략 5매치 일 경우 처리
+        if (pointdown.GetBlockColorTypes() == EBLOCKCOLORTYPE.FIVE || pointenter.GetBlockColorTypes() == EBLOCKCOLORTYPE.FIVE)
+        {
+            //타입별 매칭 처리
+            var list = new List<UI_Match_Block>();
+            list.Add(pointdown);
+            list.Add(pointenter);
+            GetMatchTypeFuction(list, matchblockdic);
+
+            //매칭 성공하면 위치는 고정하고 매칭 성공 처리 진행
+            MatchComplte(list, new List<UI_Match_Block>(), pointenter);
+            _user_move_match_complte?.Invoke();
+            _ismatching = false;
+            return;
+        }
+
         var matchresult = GetMatchBlock(downpoint.x, downpoint.y, width, height, matchblockdic, true);
         var downpointcheck = matchresult.matchblocklist_x.Count >= 3 || matchresult.matchblocklist_y.Count >= 3;
         //매치 성공
         if (downpointcheck)
         {
             //타입별 매칭 처리
-            var checkspecial = GetMatchTypeFuction(matchresult.matchblocklist_x, matchblockdic) || GetMatchTypeFuction(matchresult.matchblocklist_y, matchblockdic);
-
-            //매칭 성공하면 위치는 고정하고 매칭 성공 처리 진행
-            MatchComplte(matchresult.matchblocklist_x, matchresult.matchblocklist_y, checkspecial, pointenter);
+            GetMatchTypeFuction(matchresult.matchblocklist_x, matchblockdic);
+            GetMatchTypeFuction(matchresult.matchblocklist_y, matchblockdic);
         }
 
         var matchresult_enter = GetMatchBlock(enterpoint.x, enterpoint.y, width, height, matchblockdic, true);
@@ -206,12 +218,15 @@ public class MatchManager : MonoBehaviour
         if (entercheck)
         {
             //타입별 매칭 처리
-            var checkspecial = GetMatchTypeFuction(matchresult_enter.matchblocklist_x, matchblockdic) || GetMatchTypeFuction(matchresult_enter.matchblocklist_y, matchblockdic);
-
-            //매칭 성공하면 위치는 고정하고 매칭 성공 처리 진행
-            MatchComplte(matchresult_enter.matchblocklist_x, matchresult_enter.matchblocklist_y, checkspecial, pointdown);
+            GetMatchTypeFuction(matchresult_enter.matchblocklist_x, matchblockdic);
+            GetMatchTypeFuction(matchresult_enter.matchblocklist_y, matchblockdic);
         }
 
+        matchresult_enter.matchblocklist_x.AddRange(matchresult.matchblocklist_x);
+        var totalx = matchresult_enter.matchblocklist_x.Distinct().ToList();
+        matchresult_enter.matchblocklist_y.AddRange(matchresult.matchblocklist_y);
+        var totaly = matchresult_enter.matchblocklist_y.Distinct().ToList();
+        MatchComplte(totalx, totaly, pointenter);
         //매칭 성공 시 원상복구 막기 
         if (downpointcheck || entercheck)
         {
@@ -402,20 +417,21 @@ public class MatchManager : MonoBehaviour
                     break;
                 //같은 색상 모두 파괴
                 case EMATCHTYPE.FIVE:
-                    breakblocklist.AddRange(SetFiveMatch(breakblocklist[i].GetBlockColorTypes(), matchblockdic));
+                    var color = i == 0 ? breakblocklist[1].GetBlockColorTypes() : breakblocklist[0].GetBlockColorTypes();
+                    breakblocklist.AddRange(SetFiveMatch(color, matchblockdic));
                     break;
-                    // //3x3 파괴
-                    // case EMATCHTYPE.CROSS_THREE:
-                    //     breakblocklist.AddRange(SetForeMatch(i, blocklist, matchblockdic));
-                    //     break;
-                    // //x,y한줄씩 파괴
-                    // case EMATCHTYPE.CROSS_FOUR:
-                    //     breakblocklist.AddRange(SetForeMatch(i, blocklist, matchblockdic));
-                    //     break;
-                    // //전체 파괴
-                    // case EMATCHTYPE.CROSS_FIVE:
-                    //     breakblocklist.AddRange(SetForeMatch(i, blocklist, matchblockdic));
-                    //     break;
+                //3x3 파괴
+                case EMATCHTYPE.CROSS_THREE:
+                    breakblocklist.AddRange(Set_Corss_Match(-1, 2, breakblocklist, matchblockdic));
+                    break;
+                //x,y한줄씩 파괴
+                case EMATCHTYPE.CROSS_FOUR:
+                    breakblocklist.AddRange(Set_Corss_Match(-3, 4, breakblocklist, matchblockdic));
+                    break;
+                //전체 파괴
+                case EMATCHTYPE.CROSS_FIVE:
+                    breakblocklist.AddRange(Set_Corss_Match(-6, 7, breakblocklist, matchblockdic));
+                    break;
             }
         }
         return isspecial;
@@ -473,5 +489,28 @@ public class MatchManager : MonoBehaviour
     {
         var colorlist = matchblockdic.Where(x => x.Value != null).Where(x => x.Value.GetBlockColorTypes() == colortpye).Select(x => x.Value).ToList();
         return colorlist;
+    }
+
+    List<UI_Match_Block> Set_Corss_Match(int startindex, int endindex, List<UI_Match_Block> boomblock, Dictionary<(int, int), UI_Match_Block> matchblockdic)
+    {
+        var breaklist = new List<UI_Match_Block>();
+        var point = GetMiddlePoint(boomblock);
+
+        for (int y = startindex; y < endindex; y++)
+        {
+            for (int x = startindex; x < endindex; x++)
+            {
+                var keyx = point.x + x;
+                var keyy = point.y + y;
+
+                if (matchblockdic.TryGetValue((keyx, keyy), out var block) == false)
+                {
+                    continue;
+                }
+                breaklist.Add(block);
+            }
+        }
+
+        return breaklist;
     }
 }
