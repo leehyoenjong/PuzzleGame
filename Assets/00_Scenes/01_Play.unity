@@ -225,6 +225,7 @@ GameObject:
   - component: {fileID: 141673981}
   - component: {fileID: 141673982}
   - component: {fileID: 141673983}
+  - component: {fileID: 141673984}
   m_Layer: 0
   m_Name: Manager
   m_TagString: Untagged
@@ -259,8 +260,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86383006d1c474a4d8522d003d482507, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Width: 7
-  Height: 7
   _matchslot: {fileID: 8113716226079870034, guid: 6f93dc35d0c9f8241a959457441f5b9f, type: 3}
   _slotparent: {fileID: 1815868277}
   _blockparent: {fileID: 234646230}
@@ -348,6 +347,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bdce666c9b321d49bf53b2a79016f38, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &141673984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 141673975}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66b26a1c5c11f4e2aa4444c7c50bb14c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _mapData: {fileID: 4900000, guid: ee8c3f828415a4f6599982c25353a1b1, type: 3}
 --- !u!1 &234646229
 GameObject:
   m_ObjectHideFlags: 0

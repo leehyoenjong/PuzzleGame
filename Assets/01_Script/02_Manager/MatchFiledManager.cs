@@ -11,6 +11,7 @@ public class MatchFiledManager : MonoBehaviour
     [SerializeField] GameObject _matchslot;
     [SerializeField] Transform _slotparent;
     [SerializeField] Transform _blockparent;
+    [SerializeField] FiledManager _filedManager;
 
     Dictionary<(int x, int y), UI_Match_Slot> _matchslotdic = new Dictionary<(int, int), UI_Match_Slot>();
     Dictionary<(int x, int y), UI_Match_Block> _matchblockdic = new Dictionary<(int, int), UI_Match_Block>();
@@ -119,10 +120,15 @@ public class MatchFiledManager : MonoBehaviour
         var startX = -totalWidth / 2f;
         var startY = totalHeight / 2f;
 
-        for (int y = 0; y < Width; y++)
+        for (int y = 0; y < Height; y++)
         {
-            for (int x = 0; x < Height; x++)
+            for (int x = 0; x < Width; x++)
             {
+                if (_filedManager.GetMapData().Contains((x, y)) == false)
+                {
+                    continue;
+                }
+
                 var matchslotobject = Instantiate(_matchslot, _slotparent);
                 var matchslot = matchslotobject.GetComponent<UI_Match_Slot>();
 
