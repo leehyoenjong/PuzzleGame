@@ -116,21 +116,38 @@ public class MatchManager : MonoBehaviour
 
     EMATCHTYPE GetMatchTypes(List<UI_Match_Block> x_list, List<UI_Match_Block> y_list)
     {
-        if (x_list.Count == 3 && y_list.Count == 3)
+        var crosslist = new List<UI_Match_Block>();
+        crosslist.AddRange(x_list);
+        crosslist.AddRange(y_list);
+
+        var firstblockcolor = crosslist[0].GetBlockColorTypes();
+        bool allsamecolor = crosslist.All(block => block.GetBlockColorTypes() == firstblockcolor);
+
+        if (allsamecolor)
         {
-            return EMATCHTYPE.CROSS_THREE;
-        }
-        if (x_list.Count == 4 && y_list.Count == 4)
-        {
-            return EMATCHTYPE.CROSS_FOUR;
-        }
-        if (x_list.Count == 5 && y_list.Count == 5)
-        {
-            return EMATCHTYPE.CROSS_FIVE;
+            if (x_list.Count == 3 && y_list.Count == 3)
+            {
+                return EMATCHTYPE.CROSS_THREE;
+            }
+            if (x_list.Count == 4 && y_list.Count == 4)
+            {
+                return EMATCHTYPE.CROSS_FOUR;
+            }
+            if (x_list.Count == 5 && y_list.Count == 5)
+            {
+                return EMATCHTYPE.CROSS_FIVE;
+            }
         }
 
-        if (x_list.Count == 4) return EMATCHTYPE.FORE_LEFTRIGHT;
-        if (y_list.Count == 4) return EMATCHTYPE.FORE_UPDOWN;
+
+        if (x_list.Count == 4)
+        {
+            return EMATCHTYPE.FORE_LEFTRIGHT;
+        }
+        if (y_list.Count == 4)
+        {
+            return EMATCHTYPE.FORE_UPDOWN;
+        }
 
         if (x_list.Count == 5 || y_list.Count == 5)
         {
@@ -180,7 +197,10 @@ public class MatchManager : MonoBehaviour
                 key_y++;
             }
         }
-        MatchComplte(xlist.Distinct().ToList(), ylist.Distinct().ToList());
+        if (successmatch)
+        {
+            MatchComplte(xlist.Distinct().ToList(), ylist.Distinct().ToList());
+        }
         _ismatching = false;
         return successmatch;
     }
@@ -484,6 +504,12 @@ public class MatchManager : MonoBehaviour
     bool GetMatchTypeFuction(List<UI_Match_Block> breakblocklist, Dictionary<(int, int), UI_Match_Block> matchblockdic)
     {
         bool isspecial = false;
+
+        // 매치되는 블록들이 모두 동일한 색상인지 확인
+        if (breakblocklist.Count == 0)
+        {
+            return isspecial;
+        }
 
         var maxcount = breakblocklist.Count;
         for (int i = 0; i < maxcount; i++)
