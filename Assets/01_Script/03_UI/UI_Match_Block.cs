@@ -48,7 +48,7 @@ public class UI_Match_Block : MonoBehaviour
     {
         ResetPoint();
         _rt.anchoredPosition = createpos;
-        SettingTypes();
+        SettingColorTypes();
     }
 
     void NoMatchTypeChange()
@@ -59,10 +59,16 @@ public class UI_Match_Block : MonoBehaviour
             return;
         }
 
-        SettingTypes();
+        SettingColorTypes();
     }
 
-    void SettingTypes()
+    public void SettingColorTypes(EBLOCKCOLORTYPE colortypes)
+    {
+        _colortypes = colortypes;
+        _image.color = GetColor();
+    }
+
+    void SettingColorTypes()
     {
         var ran = UnityEngine.Random.Range(0, (int)EBLOCKCOLORTYPE.MAX);
         _colortypes = (EBLOCKCOLORTYPE)ran;

@@ -8,7 +8,7 @@ using UnityEngine;
 
 public class MatchManager : MonoBehaviour
 {
-    public static event Action<int, int, EMATCHTYPE> _match_complte_createblock_event;//매치 성공 후 생성되는 개별 블록 이벤트 
+    public static event Action<int, int, EMATCHTYPE, EBLOCKCOLORTYPE> _match_complte_createblock_event;//매치 성공 후 생성되는 개별 블록 이벤트 
     public static event Action<int, int> _match_complte_block_event;//매치 성공한 블럭들 이벤트 처리
     public static event Action _user_move_match_complte;//유저가 블록 이동 후 매치 성공했을때 
     List<(int x, int y)> simurationkeylist = new List<(int x, int y)>
@@ -50,17 +50,20 @@ public class MatchManager : MonoBehaviour
         }
 
         (int x, int y) middlepoint = (0, 0);
+        EBLOCKCOLORTYPE _color = EBLOCKCOLORTYPE.MAX;
         switch (matchtype)
         {
             case EMATCHTYPE.FORE:
             case EMATCHTYPE.FIVE:
                 var slotlist = x_list.Count > 0 ? x_list : y_list;
                 middlepoint = GetMiddlePoint(slotlist);
+                _color = slotlist[0].GetBlockColorTypes();
                 break;
             case EMATCHTYPE.CROSS_THREE:
             case EMATCHTYPE.CROSS_FOUR:
             case EMATCHTYPE.CROSS_FIVE:
                 middlepoint = GetMiddlePoint(x_list, y_list);
+                _color = x_list[0].GetBlockColorTypes();
                 break;
         }
         SetMatchBlock(x_list, y_list);
@@ -68,7 +71,7 @@ public class MatchManager : MonoBehaviour
         //특수블록으로 제거했을땐 블록이 생성되지 않도록 수정
         if (isspecial == false)
         {
-            _match_complte_createblock_event?.Invoke(middlepoint.Item1, middlepoint.Item2, matchtype);
+            _match_complte_createblock_event?.Invoke(middlepoint.Item1, middlepoint.Item2, matchtype, _color);
         }
     }
 

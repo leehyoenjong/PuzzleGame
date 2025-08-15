@@ -190,7 +190,7 @@ public class MatchFiledManager : MonoBehaviour
     }
 
     //특정 위치 개별 생성
-    void CreateMatchBlock(int x, int y, EMATCHTYPE matchtype)
+    void CreateMatchBlock(int x, int y, EMATCHTYPE matchtype, EBLOCKCOLORTYPE colortypes)
     {
         // 전체 그리드의 중앙점 계산
         var totalWidth = (Width - 1) * _slotsize;
@@ -207,6 +207,7 @@ public class MatchFiledManager : MonoBehaviour
         var movepoint = new Vector2(posx, posy);
         block.Setting(movepoint);
         block.ChangePoint(x, y, movepoint, true);
+        block.SettingColorTypes(colortypes);
     }
 
     //전체 이동
