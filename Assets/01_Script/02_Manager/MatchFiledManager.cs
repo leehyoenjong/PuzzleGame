@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -204,7 +203,6 @@ public class MatchFiledManager : MonoBehaviour
         block.Setting(movepoint);
         block.ChangePoint(x, y, movepoint, true);
         block.SettingColorTypes(colortypes);
-        Debug.Log($"생성되는 위치 : {movepoint} _ 종류 타입 : {matchtype} _ 색 타입 : {colortypes}");
     }
 
     //전체 이동
@@ -307,7 +305,6 @@ public class MatchFiledManager : MonoBehaviour
 
     void RemoveIDX(UI_Match_Block block)
     {
-        Debug.Log($"리셋 번호 :{block.GetPoint()}");
         _matchblockdic[block.GetPoint()] = null;
     }
 }
