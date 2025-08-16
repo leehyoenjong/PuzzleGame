@@ -11,7 +11,6 @@ public class MatchFiledManager : MonoBehaviour
     [SerializeField] GameObject _matchslot;
     [SerializeField] Transform _slotparent;
     [SerializeField] Transform _blockparent;
-    [SerializeField] FiledManager _filedManager;
 
     Dictionary<(int x, int y), UI_Match_Slot> _matchslotdic = new Dictionary<(int, int), UI_Match_Slot>();
     Dictionary<(int x, int y), UI_Match_Block> _matchblockdic = new Dictionary<(int, int), UI_Match_Block>();
@@ -19,11 +18,17 @@ public class MatchFiledManager : MonoBehaviour
     public static event Func<Dictionary<(int, int), UI_Match_Block>, int, int, bool> _match_complte_event;//매치 성공 이벤트 
     public static event Func<Dictionary<(int, int), UI_Match_Block>, int, int, bool> _matchsimuration_check_event;//매치 시뮬레이션 체크 이벤트
     public static event Action<Dictionary<(int, int), UI_Match_Block>, UI_Match_Block, UI_Match_Block, int, int> _block_move_event;//이동 진행시 이벤트
+    public static event Func<St_ChapterData> _getchapterdata;
+    public static event Action<St_ChapterData> _load_chapter_event;
 
     public static List<Func<bool>> _match_setting_check_list = new List<Func<bool>>();//블록 생성, 이동와 같은 것들을 진행해도 되는지 체크하는 이벤트
     public static event Action _no_match_block_event;//매치되는 블록 없을때 이벤트
     public static event Action _replay_complte_event;//모든 준비가 완료되었고 이제 시작해도 될때
     public static event Func<EMATCHTYPE, Transform, UI_Match_Block> _block_create_event;
+
+    List<(int x, int y)> _mapdata = new List<(int, int)>();
+    Dictionary<int, int> _topslotlistxy = new Dictionary<int, int>();
+    St_ChapterData _chapterdata;
 
     float _slotsize;//슬롯 사이즈 캐싱
     bool _issetting;//셋팅중인지 체크하는 변수
@@ -36,6 +41,7 @@ public class MatchFiledManager : MonoBehaviour
         BlockControllerManager._move_block_event += WaitAndMove;
         UI_Match_Block._move_block_event += ChangeIDX;
         UI_Match_Block._mathcomplte_event += RemoveIDX;
+        _load_chapter_event += SettingData;
     }
 
     void OnDisable()
@@ -46,6 +52,7 @@ public class MatchFiledManager : MonoBehaviour
         UI_Match_Block._move_block_event -= ChangeIDX;
         UI_Match_Block._mathcomplte_event -= RemoveIDX;
         _match_setting_check_list.Clear();
+        _load_chapter_event -= SettingData;
     }
 
     void Start()
@@ -53,9 +60,26 @@ public class MatchFiledManager : MonoBehaviour
         Setting().Forget();
     }
 
+    void SettingData(St_ChapterData chapterdata)
+    {
+        var mapdata = chapterdata.GetMapData();
+        _width = mapdata.width;
+        _height = mapdata.height;
+        _mapdata = mapdata.mapdata;
+        _topslotlistxy = mapdata.topslotlistxy;
+    }
+
+    public bool CheckMap((int, int) key)
+    {
+        return _mapdata.Contains(key);
+    }
+
     async UniTaskVoid Setting()
     {
         _issetting = true;
+        _chapterdata = _getchapterdata.Invoke();
+        _load_chapter_event?.Invoke(_chapterdata);
+
         SettingSlotSizeAndWidthHieght();
         CreateMatchSlot();
         var createblockresult = CreateMatchBlock();
@@ -71,7 +95,7 @@ public class MatchFiledManager : MonoBehaviour
 
         //새롭게 생성해야할 블록이 있는지 체크
         var blockList = _matchblockdic.Values.Where(x => x != null).ToList();
-        if (blockList.Count == _filedManager.GetMapData().Count)
+        if (blockList.Count == _mapdata.Count)
         {
             //매치 가능한 블록이 있는지 체크
             var checksimurationmatchblock = (bool)_matchsimuration_check_event?.Invoke(_matchblockdic, _width, _height);
@@ -110,9 +134,6 @@ public class MatchFiledManager : MonoBehaviour
         // _matchslot의 사이즈를 가져오기
         var slotRectTransform = _matchslot.GetComponent<RectTransform>();
         _slotsize = slotRectTransform.sizeDelta.x;
-
-        _width = _filedManager.GetWidth();
-        _height = _filedManager.GetHeight();
     }
 
     void CreateMatchSlot()
@@ -127,7 +148,7 @@ public class MatchFiledManager : MonoBehaviour
         {
             for (int x = 0; x < _width; x++)
             {
-                if (_filedManager.CheckMap((x, y)) == false)
+                if (CheckMap((x, y)) == false)
                 {
                     continue;
                 }
@@ -164,7 +185,7 @@ public class MatchFiledManager : MonoBehaviour
         var toppoint = new Dictionary<(int, int), UI_Match_Slot>();
         for (int i = 0; i < _width; i++)
         {
-            var key = (i, _filedManager.GetTopSlotXY()[i]);
+            var key = (i, _topslotlistxy[i]);
             toppoint.Add(key, _matchslotdic[key]);
         }
 
@@ -175,7 +196,7 @@ public class MatchFiledManager : MonoBehaviour
             for (int x = 0; x < _width; x++)
             {
                 var key = (x, y);
-                if (_filedManager.CheckMap(key) == false)
+                if (CheckMap(key) == false)
                 {
                     continue;
                 }
@@ -186,7 +207,7 @@ public class MatchFiledManager : MonoBehaviour
                     continue;
                 }
                 //최상위 위에서 생성되서 내려오도록 할 예정
-                var toppointkey = (x, _filedManager.GetTopSlotXY()[x]);
+                var toppointkey = (x, _topslotlistxy[x]);
 
                 //최상위 위쪽에다 블록 생성
                 var block = _block_create_event.Invoke(EMATCHTYPE.THREE, _blockparent);
@@ -252,7 +273,7 @@ public class MatchFiledManager : MonoBehaviour
             for (int x = 0; x < _width; x++)
             {
                 var key = (x, y);
-                if (_filedManager.CheckMap(key) == false)
+                if (CheckMap(key) == false)
                 {
                     continue;
                 }

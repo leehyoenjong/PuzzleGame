@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
-using Unity.Burst.Intrinsics;
-using Unity.Collections;
 using UnityEngine;
 
 public struct SpecialBlockCreationRequest
@@ -77,7 +75,6 @@ public class MatchManager : MonoBehaviour
         SetMatchBlock(x_list, y_list);
 
         //특수블록으로 제거했을땐 블록이 생성되지 않도록 수정
-        Debug.Log($"생성하려는 블록의 위치:{middlepoint}");
         _match_complte_createblock_event?.Invoke(middlepoint.x, middlepoint.y, matchtype, _color);
     }
 
