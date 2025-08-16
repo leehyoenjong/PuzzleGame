@@ -46,7 +46,6 @@ public class PoolSystem_Block : MonoBehaviour
         if (blockpool.Count > 0)
         {
             block = blockpool.Dequeue();
-            block.gameObject.SetActive(true);
             return block;
         }
 
@@ -60,6 +59,7 @@ public class PoolSystem_Block : MonoBehaviour
         var createblock = Instantiate(getblock._blockobject, parent);
         var matchblock = createblock.GetComponent<UI_Match_Block>();
         matchblock.ResetPoint();
+        matchblock.gameObject.SetActive(false);
         return matchblock;
     }
 
@@ -71,7 +71,7 @@ public class PoolSystem_Block : MonoBehaviour
             return;
         }
 
-        relelseblock.gameObject.SetActive(false);
+        relelseblock.DisableAni();
         relelseblock.ResetPoint();
         blockpool.Enqueue(relelseblock);
     }

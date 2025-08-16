@@ -1,4 +1,5 @@
 using System;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,11 +20,15 @@ public class UI_Match_Block : MonoBehaviour
     [SerializeField] int _score;
     public int GetScore() => _score;
 
+    [Header("연출")]
+    private const float ANIMATION_DURATION = 0.25f;
+    private Tween _currentScaleTween;
+
     //타입
-    [SerializeField] EBLOCKCOLORTYPE _colortypes;
+    EBLOCKCOLORTYPE _colortypes;
     public EBLOCKCOLORTYPE GetBlockColorTypes() => _colortypes;
 
-    [SerializeField] int _x, _y;
+    int _x, _y;
     public (int x, int y) GetPoint() => (_x, _y);
 
     public static event Action<UI_Match_Block> _mathcomplte_event;
@@ -42,12 +47,16 @@ public class UI_Match_Block : MonoBehaviour
     {
         MatchManager._match_complte_block_event -= ComplteMatch;
         MatchFiledManager._no_match_block_event -= NoMatchTypeChange;
+
+        // 오브젝트가 비활성화될 때 진행 중인 애니메이션 정리
+        _currentScaleTween?.Kill();
     }
 
     public void Setting(Vector2 createpos)
     {
         _rt.anchoredPosition = createpos;
         SettingColorTypes();
+        ActiveAni();
     }
 
     void NoMatchTypeChange()
@@ -153,5 +162,22 @@ public class UI_Match_Block : MonoBehaviour
             default:
                 return Color.black;
         }
+    }
+
+    public void DisableAni()
+    {
+        // 진행 중인 스케일 애니메이션이 있다면 중단
+        _currentScaleTween?.Kill();
+
+        _currentScaleTween = transform.DOScale(0f, ANIMATION_DURATION).SetEase(Ease.InBack);
+    }
+
+    void ActiveAni()
+    {
+        // 진행 중인 스케일 애니메이션이 있다면 중단 (DisableAni 포함)
+        _currentScaleTween?.Kill();
+        this.gameObject.SetActive(true);
+        transform.localScale = Vector3.zero;
+        _currentScaleTween = transform.DOScale(1f, ANIMATION_DURATION).SetEase(Ease.OutBack);
     }
 }
