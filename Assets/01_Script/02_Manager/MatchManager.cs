@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
-using Unity.Burst.Intrinsics;
-using Unity.Collections;
 using UnityEngine;
 
 public struct SpecialBlockCreationRequest
@@ -77,7 +75,6 @@ public class MatchManager : MonoBehaviour
         SetMatchBlock(x_list, y_list);
 
         //특수블록으로 제거했을땐 블록이 생성되지 않도록 수정
-        Debug.Log($"생성하려는 블록의 위치:{middlepoint}");
         _match_complte_createblock_event?.Invoke(middlepoint.x, middlepoint.y, matchtype, _color);
     }
 
@@ -116,21 +113,38 @@ public class MatchManager : MonoBehaviour
 
     EMATCHTYPE GetMatchTypes(List<UI_Match_Block> x_list, List<UI_Match_Block> y_list)
     {
-        if (x_list.Count == 3 && y_list.Count == 3)
+        var crosslist = new List<UI_Match_Block>();
+        crosslist.AddRange(x_list);
+        crosslist.AddRange(y_list);
+
+        var firstblockcolor = crosslist[0].GetBlockColorTypes();
+        bool allsamecolor = crosslist.All(block => block.GetBlockColorTypes() == firstblockcolor);
+
+        if (allsamecolor)
         {
-            return EMATCHTYPE.CROSS_THREE;
-        }
-        if (x_list.Count == 4 && y_list.Count == 4)
-        {
-            return EMATCHTYPE.CROSS_FOUR;
-        }
-        if (x_list.Count == 5 && y_list.Count == 5)
-        {
-            return EMATCHTYPE.CROSS_FIVE;
+            if (x_list.Count == 3 && y_list.Count == 3)
+            {
+                return EMATCHTYPE.CROSS_THREE;
+            }
+            if (x_list.Count == 4 && y_list.Count == 4)
+            {
+                return EMATCHTYPE.CROSS_FOUR;
+            }
+            if (x_list.Count == 5 && y_list.Count == 5)
+            {
+                return EMATCHTYPE.CROSS_FIVE;
+            }
         }
 
-        if (x_list.Count == 4) return EMATCHTYPE.FORE_LEFTRIGHT;
-        if (y_list.Count == 4) return EMATCHTYPE.FORE_UPDOWN;
+
+        if (x_list.Count == 4)
+        {
+            return EMATCHTYPE.FORE_LEFTRIGHT;
+        }
+        if (y_list.Count == 4)
+        {
+            return EMATCHTYPE.FORE_UPDOWN;
+        }
 
         if (x_list.Count == 5 || y_list.Count == 5)
         {
@@ -145,12 +159,12 @@ public class MatchManager : MonoBehaviour
         bool successmatch = false;
         _ismatching = true;
         //블록이 아닌 슬롯의 정보를 저장하여 위치값 계산할 예정
-        var maxcount = matchblockdic.Count;
+        var maxcount = width * height;
         int key_y = 0;
+        int key_x = 0;
 
         List<UI_Match_Block> xlist = new List<UI_Match_Block>();
         List<UI_Match_Block> ylist = new List<UI_Match_Block>();
-        int key_x = 0;
 
         for (int i = 0; i < maxcount; i++)
         {
@@ -180,7 +194,10 @@ public class MatchManager : MonoBehaviour
                 key_y++;
             }
         }
-        MatchComplte(xlist.Distinct().ToList(), ylist.Distinct().ToList());
+        if (successmatch)
+        {
+            MatchComplte(xlist.Distinct().ToList(), ylist.Distinct().ToList());
+        }
         _ismatching = false;
         return successmatch;
     }
@@ -320,7 +337,10 @@ public class MatchManager : MonoBehaviour
         {
             for (int point = 0; point < simurationcount; point++)
             {
-                var origin = matchblockdic[(key_x, key_y)];
+                if (matchblockdic.TryGetValue((key_x, key_y), out var origin) == false)
+                {
+                    continue;
+                }
 
                 var nextkeyx = key_x + simurationkeylist[point].x;
                 var nextkeyy = key_y + simurationkeylist[point].y;
@@ -363,6 +383,11 @@ public class MatchManager : MonoBehaviour
 
     EMATCHING MatingBlock((int x, int y) key, bool max, Dictionary<(int, int), UI_Match_Block> matchblockdic, List<UI_Match_Block> matching)
     {
+        if (matchblockdic.ContainsKey(key) == false)
+        {
+            return max ? EMATCHING.MAX_MATCHEND : EMATCHING.NONE_SLOT;
+        }
+
         if (matchblockdic[key] == null)
         {
             return EMATCHING.STOP;
@@ -411,6 +436,15 @@ public class MatchManager : MonoBehaviour
 
             var checkmaxindex = i == maxcount - 1;
             var state = MatingBlock(key, checkmaxindex, matchblockdic, matching);
+
+            if (state == EMATCHING.NONE_SLOT)
+            {
+                if (matching.Count >= 3)
+                {
+                    matchblocklist.AddRange(matching.GetRange(0, matching.Count));
+                }
+                matching.Clear();
+            }
 
             if (checkmaxindex && matching.Count >= 3)
             {
@@ -467,6 +501,12 @@ public class MatchManager : MonoBehaviour
     bool GetMatchTypeFuction(List<UI_Match_Block> breakblocklist, Dictionary<(int, int), UI_Match_Block> matchblockdic)
     {
         bool isspecial = false;
+
+        // 매치되는 블록들이 모두 동일한 색상인지 확인
+        if (breakblocklist.Count == 0)
+        {
+            return isspecial;
+        }
 
         var maxcount = breakblocklist.Count;
         for (int i = 0; i < maxcount; i++)

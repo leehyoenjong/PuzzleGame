@@ -40,5 +40,6 @@ public enum EMATCHING
     ING,
     STOP,
     MAX_MATCHEND,
-    MAX_NOMATCHEND
+    MAX_NOMATCHEND,
+    NONE_SLOT,
 }
