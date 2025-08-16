@@ -3,14 +3,15 @@ using UnityEngine;
 
 public class GameConditionManager : MonoBehaviour
 {
-    [SerializeField] St_GameClearCondition _clear_condition;
-    [SerializeField] St_GameOverCondtion _over_condition;
+    St_GameClearCondition _clear_condition;
+    St_GameOverCondtion _over_condition;
     public static Func<int> _overcondition_count;//조건 클리어 갯수
 
     void OnEnable()
     {
         GameManager._check_clear_condition_event += CheckGameClear;
         GameManager._check_over_condition_event += CheckGameOver;
+        MatchFiledManager._load_chapter_event += SettingCondition;
         _overcondition_count += GetConditionCount;
     }
 
@@ -18,7 +19,14 @@ public class GameConditionManager : MonoBehaviour
     {
         GameManager._check_clear_condition_event += CheckGameClear;
         GameManager._check_over_condition_event -= CheckGameOver;
+        MatchFiledManager._load_chapter_event -= SettingCondition;
         _overcondition_count -= GetConditionCount;
+    }
+
+    void SettingCondition(St_ChapterData chapterdata)
+    {
+        _clear_condition = chapterdata._clear_condition;
+        _over_condition = chapterdata._over_condition;
     }
 
     bool CheckGameClear(St_GameData gamedata)
