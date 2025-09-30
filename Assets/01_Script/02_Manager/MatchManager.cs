@@ -29,6 +29,7 @@ public class MatchManager : MonoBehaviour
     private MatchDetector _matchdetector;
     private MatchTypeClassifier _matchtypeclassifier;
     private SpecialBlockFactory _specialblockfactory;
+    private ChainReactionProcessor _chainreactionprocessor;
 
     //매치 진행중인지 체크
     bool _ismatching;
@@ -39,6 +40,7 @@ public class MatchManager : MonoBehaviour
         _matchdetector = new MatchDetector();
         _matchtypeclassifier = new MatchTypeClassifier();
         _specialblockfactory = new SpecialBlockFactory();
+        _chainreactionprocessor = new ChainReactionProcessor();
     }
 
     void OnEnable()
@@ -204,7 +206,7 @@ public class MatchManager : MonoBehaviour
         var distinctBlocksToDestroy = blocksToDestroy.Distinct().ToList();
 
         // 기존 특수 블록 효과 처리 (문제점 2 해결)
-        var finalBlocksToDestroy = ProcessChainReaction(distinctBlocksToDestroy, matchblockdic);
+        var finalBlocksToDestroy = _chainreactionprocessor.ProcessChainReaction(distinctBlocksToDestroy, matchblockdic);
 
 
         // --- 2단계: 파괴 ---
@@ -319,175 +321,32 @@ public class MatchManager : MonoBehaviour
 
     bool GetMatchTypeFuction(List<UI_Match_Block> breakblocklist, Dictionary<(int, int), UI_Match_Block> matchblockdic)
     {
-        bool isspecial = false;
-
         // 매치되는 블록들이 모두 동일한 색상인지 확인
         if (breakblocklist.Count == 0)
         {
-            return isspecial;
+            return false;
         }
 
-        var maxcount = breakblocklist.Count;
-        for (int i = 0; i < maxcount; i++)
+        // 특수 블록이 있는지 확인
+        bool hasspecialblock = breakblocklist.Any(block => 
         {
-            var blocktypes = breakblocklist[i].GetBlockMatchTypes();
-            switch (blocktypes)
-            {
-                //한줄 모두 파괴 
-                case EMATCHTYPE.FORE_UPDOWN:
-                    breakblocklist.AddRange(SetForeMatch(breakblocklist[i], matchblockdic));
-                    isspecial = true;
-                    break;
-                //같은 색상 모두 파괴
-                case EMATCHTYPE.FIVE:
-                    var color = i == 0 ? breakblocklist[1].GetBlockColorTypes() : breakblocklist[0].GetBlockColorTypes();
-                    breakblocklist.AddRange(SetFiveMatch(color, matchblockdic));
-                    break;
-                //3x3 파괴
-                case EMATCHTYPE.CROSS_THREE:
-                    breakblocklist.AddRange(Set_Corss_Match(-1, 2, breakblocklist[i], matchblockdic));
-                    break;
-                //x,y한줄씩 파괴
-                case EMATCHTYPE.CROSS_FOUR:
-                    breakblocklist.AddRange(Set_Corss_Match(-3, 4, breakblocklist[i], matchblockdic));
-                    break;
-                //전체 파괴
-                case EMATCHTYPE.CROSS_FIVE:
-                    breakblocklist.AddRange(Set_Corss_Match(-6, 7, breakblocklist[i], matchblockdic));
-                    break;
-            }
+            var type = block.GetBlockMatchTypes();
+            return type != EMATCHTYPE.THREE;
+        });
+
+        if (hasspecialblock)
+        {
+            // ChainReactionProcessor를 사용하여 체인 반응 처리
+            var finalblocks = _chainreactionprocessor.ProcessChainReaction(breakblocklist, matchblockdic);
+            
+            // 원래 리스트를 교체
+            breakblocklist.Clear();
+            breakblocklist.AddRange(finalblocks);
+            
+            return true;
         }
-        return isspecial;
+
+        return false;
     }
 
-    List<UI_Match_Block> ProcessChainReaction(List<UI_Match_Block> initialBlocks, Dictionary<(int, int), UI_Match_Block> matchblockdic)
-    {
-        var finalDestroyList = new HashSet<UI_Match_Block>(initialBlocks);
-        var processQueue = new Queue<(UI_Match_Block block, EBLOCKCOLORTYPE inheritedColor)>();
-
-        // 초기 블록들을 큐에 추가
-        foreach (var block in initialBlocks)
-        {
-            if (IsSpecialBlock(block))
-            {
-                processQueue.Enqueue((block, block.GetBlockColorTypes()));
-            }
-        }
-
-        while (processQueue.Count > 0)
-        {
-            var (currentBlock, inheritedColor) = processQueue.Dequeue();
-            var blocksAffectedByEffect = new List<UI_Match_Block>();
-
-            switch (currentBlock.GetBlockMatchTypes())
-            {
-                case EMATCHTYPE.FORE_LEFTRIGHT:
-                case EMATCHTYPE.FORE_UPDOWN:
-                    blocksAffectedByEffect.AddRange(SetForeMatch(currentBlock, matchblockdic));
-                    break;
-                case EMATCHTYPE.FIVE:
-                    // FORE 블록에서 색상을 물려받았는지 확인
-                    var colorToMatch = inheritedColor != EBLOCKCOLORTYPE.FIVE ? inheritedColor : currentBlock.GetBlockColorTypes();
-                    if (colorToMatch == EBLOCKCOLORTYPE.FIVE)
-                    {
-                        // FIVE 블록이 다른 FIVE블록과 만나 파괴되는 경우,
-                        // 임의의 색상(예: RED)을 지정하거나 다른 규칙 필요. 여기서는 RED로 가정
-                        colorToMatch = EBLOCKCOLORTYPE.RED;
-                    }
-                    blocksAffectedByEffect.AddRange(SetFiveMatch(colorToMatch, matchblockdic));
-                    break;
-                case EMATCHTYPE.CROSS_THREE:
-                    blocksAffectedByEffect.AddRange(Set_Corss_Match(-1, 2, currentBlock, matchblockdic));
-                    break;
-                case EMATCHTYPE.CROSS_FOUR:
-                    blocksAffectedByEffect.AddRange(Set_Corss_Match(-3, 4, currentBlock, matchblockdic));
-                    break;
-                case EMATCHTYPE.CROSS_FIVE:
-                    blocksAffectedByEffect.AddRange(Set_Corss_Match(-6, 7, currentBlock, matchblockdic));
-                    break;
-            }
-
-            foreach (var affectedBlock in blocksAffectedByEffect)
-            {
-                // 아직 최종 파괴 목록에 없고, 큐에도 없는 새로운 특수 블록이라면
-                if (finalDestroyList.Contains(affectedBlock) == false && IsSpecialBlock(affectedBlock))
-                {
-                    // FIVE 블록을 위한 색상 상속
-                    var colorToInherit = currentBlock.GetBlockMatchTypes() == EMATCHTYPE.FIVE ? inheritedColor : affectedBlock.GetBlockColorTypes();
-                    processQueue.Enqueue((affectedBlock, colorToInherit));
-                }
-                finalDestroyList.Add(affectedBlock);
-            }
-        }
-        return finalDestroyList.ToList();
-    }
-
-    bool IsSpecialBlock(UI_Match_Block block)
-    {
-        var type = block.GetBlockMatchTypes();
-        return type != EMATCHTYPE.THREE;
-    }
-
-
-    //4칸 매치
-    List<UI_Match_Block> SetForeMatch(UI_Match_Block currentBlock, Dictionary<(int, int), UI_Match_Block> matchblockdic)
-    {
-        var breaklist = new List<UI_Match_Block>();
-        var currentPoint = currentBlock.GetPoint();
-        var blockType = currentBlock.GetBlockMatchTypes();
-
-        if (blockType == EMATCHTYPE.FORE_LEFTRIGHT)
-        {
-            // x축 방향 한줄 파괴 - 같은 y좌표의 모든 블록
-            foreach (var block in matchblockdic)
-            {
-                if (block.Key.Item2 == currentPoint.y && block.Value != null)
-                {
-                    breaklist.Add(block.Value);
-                }
-            }
-        }
-        else // FORE_UPDOWN
-        {
-            // y축 방향 한줄 파괴 - 같은 x좌표의 모든 블록
-            foreach (var block in matchblockdic)
-            {
-                if (block.Key.Item1 == currentPoint.x && block.Value != null)
-                {
-                    breaklist.Add(block.Value);
-                }
-            }
-        }
-
-        return breaklist;
-    }
-
-    List<UI_Match_Block> SetFiveMatch(EBLOCKCOLORTYPE colortpye, Dictionary<(int, int), UI_Match_Block> matchblockdic)
-    {
-        var colorlist = matchblockdic.Where(x => x.Value != null).Where(x => x.Value.GetBlockColorTypes() == colortpye).Select(x => x.Value).ToList();
-        return colorlist;
-    }
-
-    List<UI_Match_Block> Set_Corss_Match(int startindex, int endindex, UI_Match_Block boomblock, Dictionary<(int, int), UI_Match_Block> matchblockdic)
-    {
-        var breaklist = new List<UI_Match_Block>();
-        var point = boomblock.GetPoint();
-
-        for (int y = startindex; y < endindex; y++)
-        {
-            for (int x = startindex; x < endindex; x++)
-            {
-                var keyx = point.x + x;
-                var keyy = point.y + y;
-
-                if (matchblockdic.TryGetValue((keyx, keyy), out var block) == false)
-                {
-                    continue;
-                }
-                breaklist.Add(block);
-            }
-        }
-
-        return breaklist;
-    }
 }
