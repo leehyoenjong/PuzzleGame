@@ -28,6 +28,7 @@ public class MatchManager : MonoBehaviour
     // Match detection logic
     private MatchDetector _matchdetector;
     private MatchTypeClassifier _matchtypeclassifier;
+    private SpecialBlockFactory _specialblockfactory;
 
     //매치 진행중인지 체크
     bool _ismatching;
@@ -37,6 +38,7 @@ public class MatchManager : MonoBehaviour
     {
         _matchdetector = new MatchDetector();
         _matchtypeclassifier = new MatchTypeClassifier();
+        _specialblockfactory = new SpecialBlockFactory();
     }
 
     void OnEnable()
@@ -57,34 +59,15 @@ public class MatchManager : MonoBehaviour
     void MatchComplte(List<UI_Match_Block> x_list, List<UI_Match_Block> y_list, UI_Match_Block usermoveblock = null)
     {
         var matchtype = _matchtypeclassifier.ClassifyMatchType(x_list, y_list);
-        if (matchtype == EMATCHTYPE.THREE)
-        {
-            SetMatchBlock(x_list, y_list);
-            return;
-        }
 
-        (int x, int y) middlepoint = (0, 0);
-        EBLOCKCOLORTYPE _color = EBLOCKCOLORTYPE.MAX;
-        switch (matchtype)
-        {
-            case EMATCHTYPE.FORE_UPDOWN:
-            case EMATCHTYPE.FORE_LEFTRIGHT:
-            case EMATCHTYPE.FIVE:
-                var slotlist = x_list.Count > 0 ? x_list : y_list;
-                middlepoint = usermoveblock == null ? GetMiddlePoint(slotlist) : usermoveblock.GetPoint();
-                _color = matchtype == EMATCHTYPE.FIVE ? EBLOCKCOLORTYPE.FIVE : slotlist[0].GetBlockColorTypes();
-                break;
-            case EMATCHTYPE.CROSS_THREE:
-            case EMATCHTYPE.CROSS_FOUR:
-            case EMATCHTYPE.CROSS_FIVE:
-                middlepoint = usermoveblock == null ? GetMiddlePoint(x_list, y_list) : usermoveblock.GetPoint();
-                _color = x_list[0].GetBlockColorTypes();
-                break;
-        }
         SetMatchBlock(x_list, y_list);
 
-        //특수블록으로 제거했을땐 블록이 생성되지 않도록 수정
-        _match_complte_createblock_event?.Invoke(middlepoint.x, middlepoint.y, matchtype, _color);
+        var creationrequest = _specialblockfactory.CreateRequest(x_list, y_list, matchtype, usermoveblock);
+        if (creationrequest.HasValue)
+        {
+            var request = creationrequest.Value;
+            _match_complte_createblock_event?.Invoke(request.Point.x, request.Point.y, request.Type, request.Color);
+        }
     }
 
     void SetMatchBlock(List<UI_Match_Block> xlist, List<UI_Match_Block> ylist)
@@ -100,25 +83,6 @@ public class MatchManager : MonoBehaviour
         }
     }
 
-    (int x, int y) GetMiddlePoint(List<UI_Match_Block> slotlist)
-    {
-        var xmax = slotlist.Max(x => x.GetPoint().x);
-        var xmin = slotlist.Min(x => x.GetPoint().x);
-
-        var ymax = slotlist.Max(x => x.GetPoint().y);
-        var ymin = slotlist.Min(x => x.GetPoint().y);
-        return (Mathf.RoundToInt((xmin + xmax) * 0.5f), Mathf.RoundToInt((ymin + ymax) * 0.5f));
-    }
-
-    (int x, int y) GetMiddlePoint(List<UI_Match_Block> xslotlist, List<UI_Match_Block> yslotlist)
-    {
-        var commonSlot = xslotlist.Intersect(yslotlist).FirstOrDefault();
-        if (commonSlot != null)
-        {
-            return commonSlot.GetPoint();
-        }
-        return (-1, -1);
-    }
 
 
     bool AllBlockMatch(Dictionary<(int, int), UI_Match_Block> matchblockdic, int width, int height)
@@ -220,12 +184,14 @@ public class MatchManager : MonoBehaviour
         var creationRequests = new List<SpecialBlockCreationRequest>();
         if (downpointcheck)
         {
-            var request = GetSpecialBlockCreationRequest(matchresult.matchblocklist_x, matchresult.matchblocklist_y, pointenter);
+            var matchtype = _matchtypeclassifier.ClassifyMatchType(matchresult.matchblocklist_x, matchresult.matchblocklist_y);
+            var request = _specialblockfactory.CreateRequest(matchresult.matchblocklist_x, matchresult.matchblocklist_y, matchtype, pointenter);
             if (request.HasValue) creationRequests.Add(request.Value);
         }
         if (entercheck)
         {
-            var request = GetSpecialBlockCreationRequest(matchresult_enter.matchblocklist_x, matchresult_enter.matchblocklist_y, pointdown);
+            var matchtype = _matchtypeclassifier.ClassifyMatchType(matchresult_enter.matchblocklist_x, matchresult_enter.matchblocklist_y);
+            var request = _specialblockfactory.CreateRequest(matchresult_enter.matchblocklist_x, matchresult_enter.matchblocklist_y, matchtype, pointdown);
             if (request.HasValue) creationRequests.Add(request.Value);
         }
 
@@ -255,39 +221,6 @@ public class MatchManager : MonoBehaviour
         _ismatching = false;
     }
 
-    /// <summary>
-    /// 매치 그룹을 평가해서 생성할 특수 블록 정보를 반환하는 함수
-    /// </summary>
-    SpecialBlockCreationRequest? GetSpecialBlockCreationRequest(List<UI_Match_Block> x_list, List<UI_Match_Block> y_list, UI_Match_Block usermoveblock)
-    {
-        var matchtype = _matchtypeclassifier.ClassifyMatchType(x_list, y_list);
-        if (matchtype == EMATCHTYPE.THREE)
-        {
-            // 3매치는 특수 블록을 생성하지 않음
-            return null;
-        }
-
-        (int x, int y) middlepoint = (0, 0);
-        EBLOCKCOLORTYPE _color = EBLOCKCOLORTYPE.MAX;
-        switch (matchtype)
-        {
-            case EMATCHTYPE.FORE_LEFTRIGHT:
-            case EMATCHTYPE.FORE_UPDOWN:
-            case EMATCHTYPE.FIVE:
-                var slotlist = x_list.Count > 0 ? x_list : y_list;
-                middlepoint = usermoveblock.GetPoint();
-                _color = matchtype == EMATCHTYPE.FIVE ? EBLOCKCOLORTYPE.FIVE : slotlist[0].GetBlockColorTypes();
-                break;
-            case EMATCHTYPE.CROSS_THREE:
-            case EMATCHTYPE.CROSS_FOUR:
-            case EMATCHTYPE.CROSS_FIVE:
-                middlepoint = usermoveblock.GetPoint();
-                _color = x_list[0].GetBlockColorTypes();
-                break;
-        }
-
-        return new SpecialBlockCreationRequest { Point = middlepoint, Type = matchtype, Color = _color };
-    }
 
     bool SimulationBlockMatch(Dictionary<(int, int), UI_Match_Block> matchblockdic, int width, int height)
     {
