@@ -13,9 +13,9 @@ public struct SpecialBlockCreationRequest
 
 public class MatchManager : MonoBehaviour
 {
-    public static event Action<int, int, EMATCHTYPE, EBLOCKCOLORTYPE> _match_complte_createblock_event;//매치 성공 후 생성되는 개별 블록 이벤트 
+    public static event Action<int, int, EMATCHTYPE, EBLOCKCOLORTYPE> _match_complte_createblock_event;//매치 성공 후 생성되는 개별 블록 이벤트
     public static event Action<int, int> _match_complte_block_event;//매치 성공한 블럭들 이벤트 처리
-    public static event Action _user_move_match_complte;//유저가 블록 이동 후 매치 성공했을때 
+    public static event Action _user_move_match_complte;//유저가 블록 이동 후 매치 성공했을때
     List<(int x, int y)> simurationkeylist = new List<(int x, int y)>
     {
         (0, 0),//오리지널
@@ -25,10 +25,17 @@ public class MatchManager : MonoBehaviour
         (1, 0)//우
     };
 
+    // Match detection logic
+    private MatchDetector _matchdetector;
 
     //매치 진행중인지 체크
     bool _ismatching;
     bool CheckMatching() => _ismatching;
+
+    void Awake()
+    {
+        _matchdetector = new MatchDetector();
+    }
 
     void OnEnable()
     {
@@ -130,7 +137,7 @@ public class MatchManager : MonoBehaviour
             {
                 return EMATCHTYPE.CROSS_FOUR;
             }
-            if (x_list.Count == 5 && y_list.Count == 5)
+            if (x_list.Count >= 5 && y_list.Count >= 5)
             {
                 return EMATCHTYPE.CROSS_FIVE;
             }
@@ -146,7 +153,7 @@ public class MatchManager : MonoBehaviour
             return EMATCHTYPE.FORE_UPDOWN;
         }
 
-        if (x_list.Count == 5 || y_list.Count == 5)
+        if (x_list.Count >= 5 || y_list.Count >= 5)
         {
             return EMATCHTYPE.FIVE;
         }
@@ -381,118 +388,37 @@ public class MatchManager : MonoBehaviour
         return false;
     }
 
-    EMATCHING MatingBlock((int x, int y) key, bool max, Dictionary<(int, int), UI_Match_Block> matchblockdic, List<UI_Match_Block> matching)
-    {
-        if (matchblockdic.ContainsKey(key) == false)
-        {
-            return max ? EMATCHING.MAX_MATCHEND : EMATCHING.NONE_SLOT;
-        }
-
-        if (matchblockdic[key] == null)
-        {
-            return EMATCHING.STOP;
-        }
-
-        if (matching.Count <= 0)
-        {
-            matching.Add(matchblockdic[key]);
-            return EMATCHING.ING;
-        }
-
-        //이미 잡힌 매칭이 있을때
-        var types = matchblockdic[key].GetBlockColorTypes();
-        matching.Add(matchblockdic[key]);
-
-        // 매칭 잡힌 타입과 현재 타입이 같은지 체크
-        if (matching[0].GetBlockColorTypes() != types)
-        {
-            if (max)
-            {
-                return EMATCHING.MAX_NOMATCHEND;
-            }
-
-            return EMATCHING.STOP;
-        }
-
-        return max ? EMATCHING.MAX_MATCHEND : EMATCHING.ING;
-    }
-
-    List<UI_Match_Block> GetMatchList(bool xory, int key_x, int key_y, int startvalue, int maxcount, Dictionary<(int, int), UI_Match_Block> matchblockdic)
-    {
-        List<UI_Match_Block> matching = new List<UI_Match_Block>();
-        List<UI_Match_Block> matchblocklist = new List<UI_Match_Block>();
-        var key = (0, 0);
-
-        for (int i = startvalue; i < maxcount; i++)
-        {
-            if (xory)
-            {
-                key = (i, key_y);
-            }
-            else
-            {
-                key = (key_x, i);
-            }
-
-            var checkmaxindex = i == maxcount - 1;
-            var state = MatingBlock(key, checkmaxindex, matchblockdic, matching);
-
-            if (state == EMATCHING.NONE_SLOT)
-            {
-                if (matching.Count >= 3)
-                {
-                    matchblocklist.AddRange(matching.GetRange(0, matching.Count));
-                }
-                matching.Clear();
-            }
-
-            if (checkmaxindex && matching.Count >= 3)
-            {
-                if (state == EMATCHING.MAX_MATCHEND)
-                {
-                    matchblocklist.AddRange(matching.GetRange(0, matching.Count));
-                }
-                else if (state == EMATCHING.MAX_NOMATCHEND)
-                {
-                    if (matching.Count > 3)
-                    {
-                        matchblocklist.AddRange(matching.GetRange(0, matching.Count - 1));
-                    }
-                }
-            }
-
-            if (state == EMATCHING.STOP)
-            {
-                if (matching.Count >= 4)
-                {
-                    // matching의 처음부터 Count-1개만큼 가져와서 추가
-                    matchblocklist.AddRange(matching.GetRange(0, matching.Count - 1));
-                    break;
-                }
-
-                if (matching.Count >= 2)
-                {
-                    matching.RemoveRange(0, matching.Count - 1);
-                }
-            }
-        }
-
-        return matchblocklist;
-    }
 
     (List<UI_Match_Block> matchblocklist_x, List<UI_Match_Block> matchblocklist_y) GetMatchBlock(int key_x, int key_y, int width, int height, Dictionary<(int, int), UI_Match_Block> matchblockdic, bool isall = false)
     {
-        List<UI_Match_Block> matchblocklist_x = GetMatchList(true, key_x, key_y, isall ? 0 : key_x, width, matchblockdic);
-        List<UI_Match_Block> matchblocklist_y = GetMatchList(false, key_x, key_y, isall ? 0 : key_y, height, matchblockdic);
+        var matchblocklist_x = new List<UI_Match_Block>();
+        var matchblocklist_y = new List<UI_Match_Block>();
 
-        //3개 이상이 아니면 매치가 되지 않은 것이기 때문에 Clear
-        if (matchblocklist_x.Count <= 2)
+        // Use MatchDetector for detection
+        var horizontalpositions = _matchdetector.DetectHorizontalMatch(matchblockdic, (key_x, key_y));
+        var verticalpositions = _matchdetector.DetectVerticalMatch(matchblockdic, (key_x, key_y));
+
+        // Convert positions to blocks
+        if (horizontalpositions != null)
         {
-            matchblocklist_x.Clear();
+            foreach (var pos in horizontalpositions)
+            {
+                if (matchblockdic.ContainsKey(pos))
+                {
+                    matchblocklist_x.Add(matchblockdic[pos]);
+                }
+            }
         }
-        if (matchblocklist_y.Count <= 2)
+
+        if (verticalpositions != null)
         {
-            matchblocklist_y.Clear();
+            foreach (var pos in verticalpositions)
+            {
+                if (matchblockdic.ContainsKey(pos))
+                {
+                    matchblocklist_y.Add(matchblockdic[pos]);
+                }
+            }
         }
 
         return (matchblocklist_x.Distinct().ToList(), matchblocklist_y.Distinct().ToList());
