@@ -27,6 +27,7 @@ public class MatchManager : MonoBehaviour
 
     // Match detection logic
     private MatchDetector _matchdetector;
+    private MatchTypeClassifier _matchtypeclassifier;
 
     //매치 진행중인지 체크
     bool _ismatching;
@@ -35,6 +36,7 @@ public class MatchManager : MonoBehaviour
     void Awake()
     {
         _matchdetector = new MatchDetector();
+        _matchtypeclassifier = new MatchTypeClassifier();
     }
 
     void OnEnable()
@@ -54,7 +56,7 @@ public class MatchManager : MonoBehaviour
 
     void MatchComplte(List<UI_Match_Block> x_list, List<UI_Match_Block> y_list, UI_Match_Block usermoveblock = null)
     {
-        var matchtype = GetMatchTypes(x_list, y_list);
+        var matchtype = _matchtypeclassifier.ClassifyMatchType(x_list, y_list);
         if (matchtype == EMATCHTYPE.THREE)
         {
             SetMatchBlock(x_list, y_list);
@@ -118,48 +120,6 @@ public class MatchManager : MonoBehaviour
         return (-1, -1);
     }
 
-    EMATCHTYPE GetMatchTypes(List<UI_Match_Block> x_list, List<UI_Match_Block> y_list)
-    {
-        var crosslist = new List<UI_Match_Block>();
-        crosslist.AddRange(x_list);
-        crosslist.AddRange(y_list);
-
-        var firstblockcolor = crosslist[0].GetBlockColorTypes();
-        bool allsamecolor = crosslist.All(block => block.GetBlockColorTypes() == firstblockcolor);
-
-        if (allsamecolor)
-        {
-            if (x_list.Count == 3 && y_list.Count == 3)
-            {
-                return EMATCHTYPE.CROSS_THREE;
-            }
-            if (x_list.Count == 4 && y_list.Count == 4)
-            {
-                return EMATCHTYPE.CROSS_FOUR;
-            }
-            if (x_list.Count >= 5 && y_list.Count >= 5)
-            {
-                return EMATCHTYPE.CROSS_FIVE;
-            }
-        }
-
-
-        if (x_list.Count == 4)
-        {
-            return EMATCHTYPE.FORE_LEFTRIGHT;
-        }
-        if (y_list.Count == 4)
-        {
-            return EMATCHTYPE.FORE_UPDOWN;
-        }
-
-        if (x_list.Count >= 5 || y_list.Count >= 5)
-        {
-            return EMATCHTYPE.FIVE;
-        }
-
-        return EMATCHTYPE.THREE;
-    }
 
     bool AllBlockMatch(Dictionary<(int, int), UI_Match_Block> matchblockdic, int width, int height)
     {
@@ -300,7 +260,7 @@ public class MatchManager : MonoBehaviour
     /// </summary>
     SpecialBlockCreationRequest? GetSpecialBlockCreationRequest(List<UI_Match_Block> x_list, List<UI_Match_Block> y_list, UI_Match_Block usermoveblock)
     {
-        var matchtype = GetMatchTypes(x_list, y_list);
+        var matchtype = _matchtypeclassifier.ClassifyMatchType(x_list, y_list);
         if (matchtype == EMATCHTYPE.THREE)
         {
             // 3매치는 특수 블록을 생성하지 않음
