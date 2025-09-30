@@ -32,10 +32,24 @@ public class ChainReactionProcessorTests
         var gameobject = new GameObject($"TestBlock_{x}_{y}");
         var block = gameobject.AddComponent<UI_Match_Block>();
         
-        // SetBlockData 메서드가 있다고 가정하고 설정
-        // 실제 구현에서는 block의 내부 필드를 직접 설정해야 할 수 있습니다
-        var blockdata = new St_BlockData { _colortypes = color, _blocktypes = EBLOCKTYPE.NORMAL };
-        block.SetBlockData(blockdata, x, y, matchtype);
+        // RectTransform 컴포넌트 추가 (UI_Match_Block이 필요로 함)
+        if (block.GetComponent<RectTransform>() == null)
+        {
+            gameobject.AddComponent<RectTransform>();
+        }
+        
+        // 리플렉션을 사용하여 private 필드들 설정
+        var blocktype = typeof(UI_Match_Block).GetField("_blocktype", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        blocktype?.SetValue(block, matchtype);
+        
+        var colortypes = typeof(UI_Match_Block).GetField("_colortypes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        colortypes?.SetValue(block, color);
+        
+        var xfield = typeof(UI_Match_Block).GetField("_x", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        xfield?.SetValue(block, x);
+        
+        var yfield = typeof(UI_Match_Block).GetField("_y", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        yfield?.SetValue(block, y);
         
         return block;
     }
