@@ -30,6 +30,8 @@ public class MatchManager : MonoBehaviour
     private MatchTypeClassifier _matchtypeclassifier;
     private SpecialBlockFactory _specialblockfactory;
     private ChainReactionProcessor _chainreactionprocessor;
+    private MoveMatchValidator _movematchvalidator;
+    private BlockSwapHandler _blockswaphandler;
 
     //매치 진행중인지 체크
     bool _ismatching;
@@ -41,6 +43,8 @@ public class MatchManager : MonoBehaviour
         _matchtypeclassifier = new MatchTypeClassifier();
         _specialblockfactory = new SpecialBlockFactory();
         _chainreactionprocessor = new ChainReactionProcessor();
+        _movematchvalidator = new MoveMatchValidator(_matchdetector);
+        _blockswaphandler = new BlockSwapHandler();
     }
 
     void OnEnable()
