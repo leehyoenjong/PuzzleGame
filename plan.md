@@ -122,24 +122,24 @@ TDD 원칙과 SOLID 디자인 패턴을 따라 MatchManager.cs와 MatchFiledMana
 ## Phase 6: MatchFiledManager에서 그리드 관리 추출
 
 ### Test 6.1: GridManager - 그리드 상태 관리
-- [ ] 테스트: 올바른 차원으로 그리드를 초기화해야 함
-- [ ] 테스트: 위치에 블록을 추가해야 함
-- [ ] 테스트: 위치에서 블록을 제거해야 함
-- [ ] 테스트: 위치에 블록이 있는지 확인해야 함
-- [ ] 테스트: 위치의 블록을 가져와야 함
-- [ ] 구현: 그리드 딕셔너리 관리와 함께 `GridManager` 클래스 생성
+- [x] 테스트: 올바른 차원으로 그리드를 초기화해야 함
+- [x] 테스트: 위치에 블록을 추가해야 함
+- [x] 테스트: 위치에서 블록을 제거해야 함
+- [x] 테스트: 위치에 블록이 있는지 확인해야 함
+- [x] 테스트: 위치의 블록을 가져와야 함
+- [x] 구현: 그리드 딕셔너리 관리와 함께 `GridManager` 클래스 생성
 
 ### Test 6.2: GridManager - 맵 검증
-- [ ] 테스트: 위치가 맵 경계 내에 있는지 검증해야 함
-- [ ] 테스트: 맵 데이터를 올바르게 로드해야 함
-- [ ] 테스트: 생성을 위한 최상단 슬롯을 추적해야 함
-- [ ] 구현: 맵 검증 메서드 추가
+- [x] 테스트: 위치가 맵 경계 내에 있는지 검증해야 함
+- [x] 테스트: 맵 데이터를 올바르게 로드해야 함
+- [x] 테스트: 생성을 위한 최상단 슬롯을 추적해야 함
+- [x] 구현: 맵 검증 메서드 추가
 
 ### Test 6.3: 통합 - MatchFiledManager 그리드 관리 교체
-- [ ] 테스트: MatchFiledManager가 모든 그리드 작업에 GridManager를 사용해야 함
-- [ ] 테스트: ChangeIDX와 RemoveIDX가 GridManager에 위임해야 함
-- [ ] 리팩토링: 그리드 관리를 GridManager로 추출
-- [ ] 커밋: [STRUCTURAL] Extract grid management logic
+- [x] 테스트: MatchFiledManager가 모든 그리드 작업에 GridManager를 사용해야 함
+- [x] 테스트: ChangeIDX와 RemoveIDX가 GridManager에 위임해야 함
+- [x] 리팩토링: 그리드 관리를 GridManager로 추출
+- [x] 커밋: [STRUCTURAL] Extract grid management logic
 
 ## Phase 7: 블록 이동 로직 추출
 
@@ -257,3 +257,6 @@ TDD 원칙과 SOLID 디자인 패턴을 따라 MatchManager.cs와 MatchFiledMana
 - 재사용 가능한 로직
 - 명확한 관심사 분리
 - 더 쉬운 유지보수 및 디버깅
+
+### 규칙:
+- 대답은 항상 한국어
