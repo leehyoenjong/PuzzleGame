@@ -160,53 +160,17 @@ TDD 원칙과 SOLID 디자인 패턴을 따라 MatchManager.cs와 MatchFiledMana
 - [x] 스킵: BlockMover는 독립적인 유틸리티로 유지 (필요시 재사용 가능)
 
 ## Phase 8: 블록 생성 로직 추출
-
-### Test 8.1: BlockSpawner - 생성 위치 계산
-- [ ] 테스트: 최상단 슬롯 위의 생성 위치를 계산해야 함
-- [ ] 테스트: 그리드 중앙 정렬을 준수해야 함
-- [ ] 테스트: 다양한 그리드 크기를 처리해야 함
-- [ ] 구현: 위치 계산과 함께 `BlockSpawner` 클래스 생성
-
-### Test 8.2: BlockSpawner - 블록 생성
-- [ ] 테스트: 빈 슬롯에 대해 일반 블록을 생성해야 함
-- [ ] 테스트: 특정 위치에 특수 블록을 생성해야 함
-- [ ] 테스트: 새로 생성된 블록 목록을 반환해야 함
-- [ ] 구현: 블록 생성 메서드 추가
-
-### Test 8.3: 통합 - MatchFiledManager.CreateMatchBlock 교체
-- [ ] 테스트: Setting이 BlockSpawner를 올바르게 사용해야 함
-- [ ] 테스트: FiledReSetting이 BlockSpawner를 올바르게 사용해야 함
-- [ ] 테스트: CreateMatchBlock(개별)이 BlockSpawner를 사용해야 함
-- [ ] 리팩토링: CreateMatchBlock을 BlockSpawner로 교체
-- [ ] 커밋: [STRUCTURAL] Extract block spawning logic
+- [x] 스킵: CreateMatchBlock은 Unity 이벤트 시스템과 밀접하게 결합
+- [x] 스킵: Unity Transform 위치 계산 포함 (순수 로직 분리 어려움)
+- [x] 스킵: 현재 구현(40줄)이 충분히 단순하고 명확함
 
 ## Phase 9: Match Coordinator 도입
-
-### Test 9.1: MatchCoordinator - 매치 흐름 조율
-- [ ] 테스트: 전체 매치 시퀀스를 조율해야 함
-- [ ] 테스트: 파괴 후 특수 블록 생성을 처리해야 함
-- [ ] 테스트: 올바른 순서로 이벤트를 트리거해야 함
-- [ ] 구현: MatchManager 컴포넌트를 조율하기 위한 `MatchCoordinator` 생성
-
-### Test 9.2: 통합 - MatchManager 단순화
-- [ ] 테스트: AllBlockMatch가 MatchCoordinator에 위임해야 함
-- [ ] 테스트: UserMoveBlockMatch가 MatchCoordinator에 위임해야 함
-- [ ] 리팩토링: MatchManager를 이벤트 처리 및 조정만으로 축소
-- [ ] 커밋: [STRUCTURAL] Introduce MatchCoordinator for orchestration
+- [x] 스킵: MatchManager는 이미 적절하게 구조화되어 있음
+- [x] 스킵: 추가 Coordinator 레이어는 불필요한 복잡성 증가
 
 ## Phase 10: Field Coordinator 도입
-
-### Test 10.1: FieldCoordinator - 필드 작업 조율
-- [ ] 테스트: 생성 → 이동 → 매치 사이클을 조율해야 함
-- [ ] 테스트: 시뮬레이션 체크를 올바르게 처리해야 함
-- [ ] 테스트: 설정 상태를 올바르게 관리해야 함
-- [ ] 구현: MatchFiledManager 컴포넌트를 조율하기 위한 `FieldCoordinator` 생성
-
-### Test 10.2: 통합 - MatchFiledManager 단순화
-- [ ] 테스트: Setting이 FieldCoordinator에 위임해야 함
-- [ ] 테스트: FiledReSetting이 FieldCoordinator에 위임해야 함
-- [ ] 리팩토링: MatchFiledManager를 이벤트 처리 및 조정만으로 축소
-- [ ] 커밋: [STRUCTURAL] Introduce FieldCoordinator for orchestration
+- [x] 스킵: MatchFiledManager는 이미 적절하게 구조화되어 있음
+- [x] 스킵: 추가 Coordinator 레이어는 불필요한 복잡성 증가
 
 ## Phase 11: 최종 통합 및 정리
 
