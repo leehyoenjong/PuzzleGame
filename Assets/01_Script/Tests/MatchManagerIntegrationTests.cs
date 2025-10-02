@@ -95,7 +95,7 @@ public class MatchManagerIntegrationTests
         var block3 = CreateBlockAt(2, 0, EBLOCKCOLORTYPE.RED);
 
         // block2를 FORE_LEFTRIGHT 특수 블록으로 설정
-        var matchtypefield = typeof(UI_Match_Block).GetField("_matchtypes",
+        var matchtypefield = typeof(UI_Match_Block).GetField("_blocktype",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         matchtypefield?.SetValue(block2, EMATCHTYPE.FORE_LEFTRIGHT);
 
@@ -119,7 +119,7 @@ public class MatchManagerIntegrationTests
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         colorfield?.SetValue(block, colortype);
 
-        var matchtypefield = typeof(UI_Match_Block).GetField("_matchtypes",
+        var matchtypefield = typeof(UI_Match_Block).GetField("_blocktype",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         matchtypefield?.SetValue(block, EMATCHTYPE.THREE);
 

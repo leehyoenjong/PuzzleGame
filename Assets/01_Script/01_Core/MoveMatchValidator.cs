@@ -1,5 +1,9 @@
 using System.Collections.Generic;
 
+/// <summary>
+/// 사용자 블록 이동이 유효한 매치를 생성하는지 검증하는 클래스
+/// FIVE 블록 특수 케이스와 양방향 매치 검증을 담당합니다.
+/// </summary>
 public class MoveMatchValidator
 {
     private readonly MatchDetector _matchdetector;

@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
+/// <summary>
+/// 매치된 블록들을 분석하여 매치 타입(3-매치, 4-매치, 5-매치, 십자)을 분류하는 클래스
+/// </summary>
 public class MatchTypeClassifier
 {
     public EMATCHTYPE ClassifyMatchType(List<UI_Match_Block> xlist, List<UI_Match_Block> ylist)

@@ -1,6 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
 
+/// <summary>
+/// 특수 블록의 연쇄 반응을 처리하는 클래스
+/// FORE, FIVE, CROSS 타입 블록의 효과와 연쇄 반응을 담당합니다.
+/// </summary>
 public class ChainReactionProcessor
 {
     public List<UI_Match_Block> ProcessEffect(UI_Match_Block specialblock, Dictionary<(int, int), UI_Match_Block> matchblockdic, EBLOCKCOLORTYPE? targetcolor = null)
@@ -34,21 +38,39 @@ public class ChainReactionProcessor
 
     public List<UI_Match_Block> ProcessChainReaction(List<UI_Match_Block> initialblocks, Dictionary<(int, int), UI_Match_Block> matchblockdic)
     {
-        var finaldestroylist = new HashSet<UI_Match_Block>(initialblocks);
+        var finaldestroylist = new HashSet<UI_Match_Block>();
+        var processedblocks = new HashSet<UI_Match_Block>();
         var processqueue = new Queue<(UI_Match_Block block, EBLOCKCOLORTYPE inheritedcolor)>();
 
-        // 초기 블록들을 큐에 추가
+        UnityEngine.Debug.Log($"[ProcessChainReaction] Starting with {initialblocks.Count} initial blocks");
+
+        // 초기 블록들을 처리
         foreach (var block in initialblocks)
         {
+            finaldestroylist.Add(block);
+            UnityEngine.Debug.Log($"[ProcessChainReaction] Added initial block at ({block.GetPoint().x}, {block.GetPoint().y}): {block.GetBlockMatchTypes()}");
+
             if (IsSpecialBlock(block))
             {
                 processqueue.Enqueue((block, block.GetBlockColorTypes()));
+                UnityEngine.Debug.Log($"[ProcessChainReaction] Enqueued special block at ({block.GetPoint().x}, {block.GetPoint().y})");
             }
         }
 
         while (processqueue.Count > 0)
         {
             var (currentblock, inheritedcolor) = processqueue.Dequeue();
+            UnityEngine.Debug.Log($"[ProcessChainReaction] Processing block at ({currentblock.GetPoint().x}, {currentblock.GetPoint().y}): {currentblock.GetBlockMatchTypes()}");
+
+            // 이미 처리한 블록은 건너뛰기 (순환 참조 방지)
+            if (processedblocks.Contains(currentblock))
+            {
+                UnityEngine.Debug.Log($"[ProcessChainReaction] Skipping already processed block at ({currentblock.GetPoint().x}, {currentblock.GetPoint().y})");
+                continue;
+            }
+
+            processedblocks.Add(currentblock);
+
             var blocksaffectedbyeffect = new List<UI_Match_Block>();
 
             switch (currentblock.GetBlockMatchTypes())
@@ -56,6 +78,7 @@ public class ChainReactionProcessor
                 case EMATCHTYPE.FORE_LEFTRIGHT:
                 case EMATCHTYPE.FORE_UPDOWN:
                     blocksaffectedbyeffect.AddRange(ProcessForeMatch(currentblock, matchblockdic));
+                    UnityEngine.Debug.Log($"[ProcessChainReaction] FORE effect affected {blocksaffectedbyeffect.Count} blocks");
                     break;
                 case EMATCHTYPE.FIVE:
                     // FORE 블록에서 색상을 물려받았는지 확인
@@ -67,30 +90,49 @@ public class ChainReactionProcessor
                         colortomatch = EBLOCKCOLORTYPE.RED;
                     }
                     blocksaffectedbyeffect.AddRange(ProcessFiveMatch(colortomatch, matchblockdic));
+                    UnityEngine.Debug.Log($"[ProcessChainReaction] FIVE effect affected {blocksaffectedbyeffect.Count} blocks with color {colortomatch}");
                     break;
                 case EMATCHTYPE.CROSS_THREE:
                     blocksaffectedbyeffect.AddRange(ProcessCrossMatch(-1, 2, currentblock, matchblockdic));
+                    UnityEngine.Debug.Log($"[ProcessChainReaction] CROSS_THREE effect affected {blocksaffectedbyeffect.Count} blocks");
                     break;
                 case EMATCHTYPE.CROSS_FOUR:
                     blocksaffectedbyeffect.AddRange(ProcessCrossMatch(-3, 4, currentblock, matchblockdic));
+                    UnityEngine.Debug.Log($"[ProcessChainReaction] CROSS_FOUR effect affected {blocksaffectedbyeffect.Count} blocks");
                     break;
                 case EMATCHTYPE.CROSS_FIVE:
                     blocksaffectedbyeffect.AddRange(ProcessCrossMatch(-6, 7, currentblock, matchblockdic));
+                    UnityEngine.Debug.Log($"[ProcessChainReaction] CROSS_FIVE effect affected {blocksaffectedbyeffect.Count} blocks");
                     break;
             }
 
             foreach (var affectedblock in blocksaffectedbyeffect)
             {
-                // 아직 최종 파괴 목록에 없고, 큐에도 없는 새로운 특수 블록이라면
-                if (finaldestroylist.Contains(affectedblock) == false && IsSpecialBlock(affectedblock))
+                bool wasadded = finaldestroylist.Add(affectedblock);
+                UnityEngine.Debug.Log($"[ProcessChainReaction] Affected block at ({affectedblock.GetPoint().x}, {affectedblock.GetPoint().y}): {affectedblock.GetBlockMatchTypes()}, Added: {wasadded}");
+
+                // 새로운 특수 블록이고 아직 처리되지 않았다면 큐에 추가
+                if (IsSpecialBlock(affectedblock) && !processedblocks.Contains(affectedblock))
                 {
                     // FIVE 블록을 위한 색상 상속
-                    var colortoinherit = currentblock.GetBlockMatchTypes() == EMATCHTYPE.FIVE ? inheritedcolor : affectedblock.GetBlockColorTypes();
+                    EBLOCKCOLORTYPE colortoinherit;
+                    if (affectedblock.GetBlockMatchTypes() == EMATCHTYPE.FIVE)
+                    {
+                        // FIVE 블록은 현재 블록의 색상을 상속
+                        colortoinherit = inheritedcolor;
+                    }
+                    else
+                    {
+                        // 다른 특수 블록은 자신의 색상 사용
+                        colortoinherit = affectedblock.GetBlockColorTypes();
+                    }
                     processqueue.Enqueue((affectedblock, colortoinherit));
+                    UnityEngine.Debug.Log($"[ProcessChainReaction] Enqueued special block at ({affectedblock.GetPoint().x}, {affectedblock.GetPoint().y})");
                 }
-                finaldestroylist.Add(affectedblock);
             }
         }
+
+        UnityEngine.Debug.Log($"[ProcessChainReaction] Final destroy list count: {finaldestroylist.Count}");
         return finaldestroylist.ToList();
     }
 

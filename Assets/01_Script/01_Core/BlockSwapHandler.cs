@@ -1,5 +1,9 @@
 using System.Collections.Generic;
 
+/// <summary>
+/// 블록 교환 및 롤백 작업을 처리하는 클래스
+/// 그리드 딕셔너리의 일관성을 유지하면서 블록 위치를 교환합니다.
+/// </summary>
 public class BlockSwapHandler
 {
     public void SwapBlocks(Dictionary<(int, int), UI_Match_Block> grid, (int, int) pos1, (int, int) pos2)

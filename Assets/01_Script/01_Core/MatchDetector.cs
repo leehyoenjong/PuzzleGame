@@ -1,11 +1,18 @@
 using System.Collections.Generic;
 
+/// <summary>
+/// 십자 매치 결과를 저장하는 구조체
+/// </summary>
 public struct CrossMatchResult
 {
     public List<(int, int)> horizontalmatches;
     public List<(int, int)> verticalmatches;
 }
 
+/// <summary>
+/// 그리드에서 매치 패턴을 감지하는 클래스
+/// 수평, 수직, 십자 매치를 감지합니다.
+/// </summary>
 public class MatchDetector
 {
     public List<(int, int)> DetectHorizontalMatch(Dictionary<(int, int), UI_Match_Block> grid, (int x, int y) startposition)

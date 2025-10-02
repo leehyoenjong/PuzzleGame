@@ -1,3 +1,7 @@
+/// <summary>
+/// 중력 시뮬레이션을 위한 블록 이동 로직을 처리하는 클래스
+/// 순수한 그리드 상태 변경을 담당하며, 애니메이션과는 분리되어 있습니다.
+/// </summary>
 public class BlockMover
 {
     public void MoveBlocksDown(GridManager gridmanager)

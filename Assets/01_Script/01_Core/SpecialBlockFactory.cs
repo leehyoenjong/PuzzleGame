@@ -2,6 +2,10 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+/// <summary>
+/// 매치 타입에 따라 특수 블록 생성 요청을 만드는 팩토리 클래스
+/// 4-매치, 5-매치, 십자 패턴에 대한 특수 블록 생성을 담당합니다.
+/// </summary>
 public class SpecialBlockFactory
 {
     public SpecialBlockCreationRequest? CreateRequest(
@@ -75,7 +79,7 @@ public class SpecialBlockFactory
         var ymax = slotlist.Max(block => block.GetPoint().y);
         var ymin = slotlist.Min(block => block.GetPoint().y);
 
-        return (Mathf.RoundToInt((xmin + xmax) * 0.5f), Mathf.RoundToInt((ymin + ymax) * 0.5f));
+        return ((xmin + xmax) / 2, (ymin + ymax) / 2);
     }
 
     private (int x, int y) CalculateIntersectionPoint(List<UI_Match_Block> xlist, List<UI_Match_Block> ylist)
