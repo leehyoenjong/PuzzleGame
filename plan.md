@@ -155,10 +155,9 @@ TDD 원칙과 SOLID 디자인 패턴을 따라 MatchManager.cs와 MatchFiledMana
 - [x] 스킵: BlockMover는 순수한 그리드 상태 변경만 담당
 
 ### Test 7.3: 통합 - MatchFiledManager.MoveMatchBlock 교체
-- [ ] 테스트: FiledReSetting이 BlockMover를 올바르게 사용해야 함
-- [ ] 테스트: WaitAndMove가 BlockMover를 올바르게 트리거해야 함
-- [ ] 리팩토링: MoveMatchBlock을 BlockMover로 교체
-- [ ] 커밋: [STRUCTURAL] Extract block movement logic
+- [x] 스킵: MoveMatchBlock은 애니메이션 로직과 밀접하게 결합되어 있음
+- [x] 스킵: 현재 구현(62줄)이 충분히 단순하고 명확함
+- [x] 스킵: BlockMover는 독립적인 유틸리티로 유지 (필요시 재사용 가능)
 
 ## Phase 8: 블록 생성 로직 추출
 
