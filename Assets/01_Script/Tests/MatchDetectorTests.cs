@@ -102,6 +102,93 @@ public class MatchDetectorTests
     }
 
     [Test]
+    public void ShouldDetect3HorizontalMatchFromMiddlePosition()
+    {
+        // Arrange: Create 3 horizontal blocks [R][R][R]
+        CreateBlockAt(0, 0, EBLOCKCOLORTYPE.RED);
+        CreateBlockAt(1, 0, EBLOCKCOLORTYPE.RED);
+        CreateBlockAt(2, 0, EBLOCKCOLORTYPE.RED);
+
+        // Act: Detect from MIDDLE position (1,0) - not start position
+        var result = _matchdetector.DetectHorizontalMatch(_testgrid, (1, 0));
+
+        // Assert: Should find ALL 3 blocks including ones to the left
+        Assert.IsNotNull(result);
+        Assert.AreEqual(3, result.Count);
+        Assert.Contains((0, 0), result);
+        Assert.Contains((1, 0), result);
+        Assert.Contains((2, 0), result);
+    }
+
+    [Test]
+    public void ShouldDetect3HorizontalMatchFromEndPosition()
+    {
+        // Arrange: Create 3 horizontal blocks [R][R][R]
+        CreateBlockAt(0, 0, EBLOCKCOLORTYPE.RED);
+        CreateBlockAt(1, 0, EBLOCKCOLORTYPE.RED);
+        CreateBlockAt(2, 0, EBLOCKCOLORTYPE.RED);
+
+        // Act: Detect from END position (2,0) - last block
+        var result = _matchdetector.DetectHorizontalMatch(_testgrid, (2, 0));
+
+        // Assert: Should find ALL 3 blocks including ones to the left
+        Assert.IsNotNull(result);
+        Assert.AreEqual(3, result.Count);
+        Assert.Contains((0, 0), result);
+        Assert.Contains((1, 0), result);
+        Assert.Contains((2, 0), result);
+    }
+
+    [Test]
+    public void ShouldDetect4HorizontalMatchFromAllPositions()
+    {
+        // Arrange: Create 4 horizontal blocks [B][B][B][B]
+        CreateBlockAt(0, 0, EBLOCKCOLORTYPE.BLUE);
+        CreateBlockAt(1, 0, EBLOCKCOLORTYPE.BLUE);
+        CreateBlockAt(2, 0, EBLOCKCOLORTYPE.BLUE);
+        CreateBlockAt(3, 0, EBLOCKCOLORTYPE.BLUE);
+
+        // Act & Assert: Test from position 0
+        var result0 = _matchdetector.DetectHorizontalMatch(_testgrid, (0, 0));
+        Assert.IsNotNull(result0);
+        Assert.AreEqual(4, result0.Count);
+
+        // Act & Assert: Test from position 1
+        var result1 = _matchdetector.DetectHorizontalMatch(_testgrid, (1, 0));
+        Assert.IsNotNull(result1);
+        Assert.AreEqual(4, result1.Count);
+
+        // Act & Assert: Test from position 2
+        var result2 = _matchdetector.DetectHorizontalMatch(_testgrid, (2, 0));
+        Assert.IsNotNull(result2);
+        Assert.AreEqual(4, result2.Count);
+
+        // Act & Assert: Test from position 3
+        var result3 = _matchdetector.DetectHorizontalMatch(_testgrid, (3, 0));
+        Assert.IsNotNull(result3);
+        Assert.AreEqual(4, result3.Count);
+    }
+
+    [Test]
+    public void ShouldDetect5HorizontalMatchFromAllPositions()
+    {
+        // Arrange: Create 5 horizontal blocks [Y][Y][Y][Y][Y]
+        CreateBlockAt(0, 0, EBLOCKCOLORTYPE.YELLOW);
+        CreateBlockAt(1, 0, EBLOCKCOLORTYPE.YELLOW);
+        CreateBlockAt(2, 0, EBLOCKCOLORTYPE.YELLOW);
+        CreateBlockAt(3, 0, EBLOCKCOLORTYPE.YELLOW);
+        CreateBlockAt(4, 0, EBLOCKCOLORTYPE.YELLOW);
+
+        // Act & Assert: Test from all 5 positions
+        for (int i = 0; i < 5; i++)
+        {
+            var result = _matchdetector.DetectHorizontalMatch(_testgrid, (i, 0));
+            Assert.IsNotNull(result, $"Failed at position {i}");
+            Assert.AreEqual(5, result.Count, $"Failed at position {i}");
+        }
+    }
+
+    [Test]
     public void ShouldDetect3VerticalMatchingBlocks()
     {
         // Arrange: Create 3 vertical blocks with same color at (0,0), (0,1), (0,2)

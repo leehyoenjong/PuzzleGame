@@ -17,24 +17,40 @@ public class MatchDetector
 {
     public List<(int, int)> DetectHorizontalMatch(Dictionary<(int, int), UI_Match_Block> grid, (int x, int y) startposition)
     {
-        if (!grid.ContainsKey(startposition))
+        if (!grid.ContainsKey(startposition) || grid[startposition] == null)
             return null;
 
         var startblock = grid[startposition];
-        var matches = new List<(int, int)> { startposition };
+        var matches = new List<(int, int)>();
 
         var startcolor = startblock.GetBlockColorTypes();
-        int currentx = startposition.x + 1;
         int y = startposition.y;
 
-        // Check right direction
-        while (grid.ContainsKey((currentx, y)))
+        // Check left direction (scan backwards from startposition)
+        int leftx = startposition.x;
+        while (grid.ContainsKey((leftx, y)))
         {
-            var block = grid[(currentx, y)];
-            if (block.GetBlockColorTypes() == startcolor)
+            var block = grid[(leftx, y)];
+            if (block != null && block.GetBlockColorTypes() == startcolor)
             {
-                matches.Add((currentx, y));
-                currentx++;
+                matches.Insert(0, (leftx, y)); // Insert at beginning to maintain order
+                leftx--;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        // Check right direction (exclude startposition as it's already added)
+        int rightx = startposition.x + 1;
+        while (grid.ContainsKey((rightx, y)))
+        {
+            var block = grid[(rightx, y)];
+            if (block != null && block.GetBlockColorTypes() == startcolor)
+            {
+                matches.Add((rightx, y));
+                rightx++;
             }
             else
             {
@@ -48,24 +64,40 @@ public class MatchDetector
 
     public List<(int, int)> DetectVerticalMatch(Dictionary<(int, int), UI_Match_Block> grid, (int x, int y) startposition)
     {
-        if (!grid.ContainsKey(startposition))
+        if (!grid.ContainsKey(startposition) || grid[startposition] == null)
             return null;
 
         var startblock = grid[startposition];
-        var matches = new List<(int, int)> { startposition };
+        var matches = new List<(int, int)>();
 
         var startcolor = startblock.GetBlockColorTypes();
         int x = startposition.x;
-        int currenty = startposition.y + 1;
 
-        // Check upward direction
-        while (grid.ContainsKey((x, currenty)))
+        // Check downward direction (scan backwards from startposition)
+        int downy = startposition.y;
+        while (grid.ContainsKey((x, downy)))
         {
-            var block = grid[(x, currenty)];
-            if (block.GetBlockColorTypes() == startcolor)
+            var block = grid[(x, downy)];
+            if (block != null && block.GetBlockColorTypes() == startcolor)
             {
-                matches.Add((x, currenty));
-                currenty++;
+                matches.Insert(0, (x, downy)); // Insert at beginning to maintain order
+                downy--;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        // Check upward direction (exclude startposition as it's already added)
+        int upy = startposition.y + 1;
+        while (grid.ContainsKey((x, upy)))
+        {
+            var block = grid[(x, upy)];
+            if (block != null && block.GetBlockColorTypes() == startcolor)
+            {
+                matches.Add((x, upy));
+                upy++;
             }
             else
             {
@@ -79,7 +111,7 @@ public class MatchDetector
 
     public CrossMatchResult? DetectCrossMatch(Dictionary<(int, int), UI_Match_Block> grid, (int x, int y) centerposition)
     {
-        if (!grid.ContainsKey(centerposition))
+        if (!grid.ContainsKey(centerposition) || grid[centerposition] == null)
             return null;
 
         var centerblock = grid[centerposition];
@@ -115,7 +147,7 @@ public class MatchDetector
         while (grid.ContainsKey((leftx, y)))
         {
             var block = grid[(leftx, y)];
-            if (block.GetBlockColorTypes() == color)
+            if (block != null && block.GetBlockColorTypes() == color)
             {
                 matches.Insert(0, (leftx, y));
                 leftx--;
@@ -131,7 +163,7 @@ public class MatchDetector
         while (grid.ContainsKey((rightx, y)))
         {
             var block = grid[(rightx, y)];
-            if (block.GetBlockColorTypes() == color)
+            if (block != null && block.GetBlockColorTypes() == color)
             {
                 matches.Add((rightx, y));
                 rightx++;
@@ -155,7 +187,7 @@ public class MatchDetector
         while (grid.ContainsKey((x, downy)))
         {
             var block = grid[(x, downy)];
-            if (block.GetBlockColorTypes() == color)
+            if (block != null && block.GetBlockColorTypes() == color)
             {
                 matches.Insert(0, (x, downy));
                 downy--;
@@ -171,7 +203,7 @@ public class MatchDetector
         while (grid.ContainsKey((x, upy)))
         {
             var block = grid[(x, upy)];
-            if (block.GetBlockColorTypes() == color)
+            if (block != null && block.GetBlockColorTypes() == color)
             {
                 matches.Add((x, upy));
                 upy++;
