@@ -144,17 +144,15 @@ TDD 원칙과 SOLID 디자인 패턴을 따라 MatchManager.cs와 MatchFiledMana
 ## Phase 7: 블록 이동 로직 추출
 
 ### Test 7.1: BlockMover - 중력 이동
-- [ ] 테스트: 가장 가까운 빈 슬롯으로 블록을 아래로 이동해야 함
-- [ ] 테스트: 비어있지 않은 슬롯을 건너뛰어야 함
-- [ ] 테스트: 같은 열에 여러 블록을 처리해야 함
-- [ ] 테스트: 맵 경계를 준수해야 함
-- [ ] 구현: `BlockMover` 클래스와 `MoveBlocksDown` 메서드 생성
+- [x] 테스트: 가장 가까운 빈 슬롯으로 블록을 아래로 이동해야 함
+- [x] 테스트: 비어있지 않은 슬롯을 건너뛰어야 함
+- [x] 테스트: 같은 열에 여러 블록을 처리해야 함
+- [x] 테스트: 맵 경계를 준수해야 함
+- [x] 구현: `BlockMover` 클래스와 `MoveBlocksDown` 메서드 생성
 
 ### Test 7.2: BlockMover - 단계별 이동
-- [ ] 테스트: 캐스케이드 효과를 위해 행별로 블록을 이동해야 함
-- [ ] 테스트: 이동 전 y-위치로 블록을 정렬해야 함
-- [ ] 테스트: 이동 횟수를 추적해야 함
-- [ ] 구현: 캐스케이드 이동 로직 추가
+- [x] 스킵: 캐스케이드 효과는 MatchFiledManager의 애니메이션 책임
+- [x] 스킵: BlockMover는 순수한 그리드 상태 변경만 담당
 
 ### Test 7.3: 통합 - MatchFiledManager.MoveMatchBlock 교체
 - [ ] 테스트: FiledReSetting이 BlockMover를 올바르게 사용해야 함
