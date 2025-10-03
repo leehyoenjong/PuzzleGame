@@ -102,9 +102,24 @@ public class MatchManager : MonoBehaviour
 
         List<UI_Match_Block> xlist = new List<UI_Match_Block>();
         List<UI_Match_Block> ylist = new List<UI_Match_Block>();
+        var processedblocks = new HashSet<UI_Match_Block>();
 
         for (int i = 0; i < maxcount; i++)
         {
+            // Skip if this position's block is already processed
+            if (matchblockdic.ContainsKey((key_x, key_y)) && processedblocks.Contains(matchblockdic[(key_x, key_y)]))
+            {
+                //매치 실패 시 다음 칸으로 이동
+                key_x++;
+                //크기만큼 도달했다면 다 확인한 것이기 때문에 y값을 증가시키고 x값 초기화
+                if (key_x >= width)
+                {
+                    key_x = 0;
+                    key_y++;
+                }
+                continue;
+            }
+
             var matchresult = GetMatchBlock(key_x, key_y, width, height, matchblockdic);
 
             //매치 성공
@@ -117,6 +132,16 @@ public class MatchManager : MonoBehaviour
                 //매칭 성공하면 위치는 고정하고 매칭 성공 처리 진행
                 xlist.AddRange(matchresult.matchblocklist_x);
                 ylist.AddRange(matchresult.matchblocklist_y);
+
+                // Mark all matched blocks as processed
+                foreach (var block in matchresult.matchblocklist_x)
+                {
+                    processedblocks.Add(block);
+                }
+                foreach (var block in matchresult.matchblocklist_y)
+                {
+                    processedblocks.Add(block);
+                }
 
                 //매치를 성공하고도 return하지 않는 이유는 모든 블록 매치를 체크해야하기 때문
                 successmatch = true;
