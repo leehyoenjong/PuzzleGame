@@ -103,12 +103,14 @@ public List<(int, int)> DetectHorizontalMatch(grid, startposition)
 
 ### Phase 2: AllBlockMatch 통합 수정
 
-#### Test 2.1: 전체 그리드 스캔 정확성
-- [ ] 테스트: 3x3 그리드 하단에 가로 매치가 있을 때 AllBlockMatch가 감지해야 함
-- [ ] 테스트: 여러 매치가 동시에 존재할 때 모두 감지해야 함
-- [ ] 테스트: L자/T자 겹치는 매치를 올바르게 처리해야 함
-- [ ] 구현: GetMatchBlock이 양방향 감지를 올바르게 처리
-- [ ] 구현: 매치 결과 병합 시 중복 제거
+#### Test 2.1: 전체 그리드 스캔 정확성 ✅
+- [x] 테스트: 3x3 그리드 하단에 가로 매치가 있을 때 AllBlockMatch가 감지해야 함
+- [x] 테스트: 여러 매치가 동시에 존재할 때 모두 감지해야 함
+- [x] 테스트: L자/T자 겹치는 매치를 올바르게 처리해야 함
+- [x] 구현: GetMatchBlock이 양방향 감지를 올바르게 처리 (Phase 1에서 이미 완료)
+- [x] 구현: 매치 결과 병합 시 중복 제거 (processedblocks HashSet으로 해결)
+
+**커밋**: `b180e1a` - [TEST] Add comprehensive AllBlockMatch grid scanning tests
 
 #### Test 2.2: 매치 결과 정규화
 - [ ] 테스트: 같은 매치를 다른 위치에서 스캔해도 동일한 결과여야 함
