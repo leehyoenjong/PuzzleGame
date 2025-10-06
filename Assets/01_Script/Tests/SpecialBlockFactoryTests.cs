@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 [TestFixture]
@@ -41,7 +42,7 @@ public class SpecialBlockFactoryTests
 
         var result = _specialblockfactory.CreateRequest(xlist, ylist, matchtype, null);
 
-        Assert.IsFalse(result.HasValue);
+        Assert.IsFalse(result.HasValue, $"Expected null for 3-match, but got Type={result?.Type}, Point={result?.Point}, Color={result?.Color}");
     }
 
     [Test]
@@ -60,10 +61,10 @@ public class SpecialBlockFactoryTests
 
         var result = _specialblockfactory.CreateRequest(xlist, ylist, matchtype, usermoveblock);
 
-        Assert.IsTrue(result.HasValue);
-        Assert.AreEqual(EMATCHTYPE.FORE_LEFTRIGHT, result.Value.Type);
-        Assert.AreEqual((1, 0), result.Value.Point);
-        Assert.AreEqual(EBLOCKCOLORTYPE.RED, result.Value.Color);
+        Assert.IsTrue(result.HasValue, "Expected special block creation for 4-match horizontal");
+        Assert.AreEqual(EMATCHTYPE.FORE_LEFTRIGHT, result.Value.Type, $"Expected FORE_LEFTRIGHT but got {result.Value.Type}");
+        Assert.AreEqual((1, 0), result.Value.Point, $"Expected point (1,0) but got {result.Value.Point}");
+        Assert.AreEqual(EBLOCKCOLORTYPE.RED, result.Value.Color, $"Expected RED but got {result.Value.Color}");
     }
 
     [Test]
@@ -82,10 +83,10 @@ public class SpecialBlockFactoryTests
 
         var result = _specialblockfactory.CreateRequest(xlist, ylist, matchtype, usermoveblock);
 
-        Assert.IsTrue(result.HasValue);
-        Assert.AreEqual(EMATCHTYPE.FORE_UPDOWN, result.Value.Type);
-        Assert.AreEqual((0, 2), result.Value.Point);
-        Assert.AreEqual(EBLOCKCOLORTYPE.BLUE, result.Value.Color);
+        Assert.IsTrue(result.HasValue, "Expected special block creation for 4-match vertical");
+        Assert.AreEqual(EMATCHTYPE.FORE_UPDOWN, result.Value.Type, $"Expected FORE_UPDOWN but got {result.Value.Type}");
+        Assert.AreEqual((0, 2), result.Value.Point, $"Expected point (0,2) but got {result.Value.Point}");
+        Assert.AreEqual(EBLOCKCOLORTYPE.BLUE, result.Value.Color, $"Expected BLUE but got {result.Value.Color}");
     }
 
     [Test]
@@ -105,36 +106,37 @@ public class SpecialBlockFactoryTests
 
         var result = _specialblockfactory.CreateRequest(xlist, ylist, matchtype, usermoveblock);
 
-        Assert.IsTrue(result.HasValue);
-        Assert.AreEqual(EMATCHTYPE.FIVE, result.Value.Type);
-        Assert.AreEqual((2, 0), result.Value.Point);
-        Assert.AreEqual(EBLOCKCOLORTYPE.FIVE, result.Value.Color);
+        Assert.IsTrue(result.HasValue, "Expected special block creation for 5-match");
+        Assert.AreEqual(EMATCHTYPE.FIVE, result.Value.Type, $"Expected FIVE but got {result.Value.Type}");
+        Assert.AreEqual((2, 0), result.Value.Point, $"Expected point (2,0) but got {result.Value.Point}");
+        Assert.AreEqual(EBLOCKCOLORTYPE.FIVE, result.Value.Color, $"Expected FIVE color type but got {result.Value.Color}");
     }
 
     [Test]
     public void ShouldCreateCrossThreeAtUserMovePosition()
     {
+        var centerblock = CreateBlock(1, 1, EBLOCKCOLORTYPE.GREEN);
         var xlist = new List<UI_Match_Block>
         {
             CreateBlock(0, 1, EBLOCKCOLORTYPE.GREEN),
-            CreateBlock(1, 1, EBLOCKCOLORTYPE.GREEN),
+            centerblock,
             CreateBlock(2, 1, EBLOCKCOLORTYPE.GREEN)
         };
         var ylist = new List<UI_Match_Block>
         {
             CreateBlock(1, 0, EBLOCKCOLORTYPE.GREEN),
-            CreateBlock(1, 1, EBLOCKCOLORTYPE.GREEN),
+            centerblock,
             CreateBlock(1, 2, EBLOCKCOLORTYPE.GREEN)
         };
-        var usermoveblock = xlist[1];
+        var usermoveblock = centerblock;
         var matchtype = _matchtypeclassifier.ClassifyMatchType(xlist, ylist);
 
         var result = _specialblockfactory.CreateRequest(xlist, ylist, matchtype, usermoveblock);
 
-        Assert.IsTrue(result.HasValue);
-        Assert.AreEqual(EMATCHTYPE.CROSS_THREE, result.Value.Type);
-        Assert.AreEqual((1, 1), result.Value.Point);
-        Assert.AreEqual(EBLOCKCOLORTYPE.GREEN, result.Value.Color);
+        Assert.IsTrue(result.HasValue, "Expected special block creation for 3x3 cross");
+        Assert.AreEqual(EMATCHTYPE.CROSS_THREE, result.Value.Type, $"Expected CROSS_THREE but got {result.Value.Type}");
+        Assert.AreEqual((1, 1), result.Value.Point, $"Expected point (1,1) but got {result.Value.Point}");
+        Assert.AreEqual(EBLOCKCOLORTYPE.GREEN, result.Value.Color, $"Expected GREEN but got {result.Value.Color}");
     }
 
     [Test]
@@ -152,35 +154,79 @@ public class SpecialBlockFactoryTests
 
         var result = _specialblockfactory.CreateRequest(xlist, ylist, matchtype, null);
 
-        Assert.IsTrue(result.HasValue);
-        Assert.AreEqual((1, 0), result.Value.Point);
+        Assert.IsTrue(result.HasValue, "Expected special block creation for 4-match without user move");
+        Assert.AreEqual((1, 0), result.Value.Point, $"Expected middle point (1,0) but got {result.Value.Point}");
     }
 
     [Test]
     public void ShouldCalculateIntersectionPointForCrossWhenNoUserMove()
     {
+        var centerblock = CreateBlock(1, 1, EBLOCKCOLORTYPE.PINK);
         var xlist = new List<UI_Match_Block>
         {
             CreateBlock(0, 1, EBLOCKCOLORTYPE.PINK),
-            CreateBlock(1, 1, EBLOCKCOLORTYPE.PINK),
+            centerblock,
             CreateBlock(2, 1, EBLOCKCOLORTYPE.PINK)
         };
         var ylist = new List<UI_Match_Block>
         {
             CreateBlock(1, 0, EBLOCKCOLORTYPE.PINK),
-            CreateBlock(1, 1, EBLOCKCOLORTYPE.PINK),
+            centerblock,
             CreateBlock(1, 2, EBLOCKCOLORTYPE.PINK)
         };
         var matchtype = _matchtypeclassifier.ClassifyMatchType(xlist, ylist);
 
         var result = _specialblockfactory.CreateRequest(xlist, ylist, matchtype, null);
 
-        Assert.IsTrue(result.HasValue);
-        Assert.AreEqual((1, 1), result.Value.Point);
+        Assert.IsTrue(result.HasValue, "Expected special block creation for cross match without user move");
+        Assert.AreEqual((1, 1), result.Value.Point, $"Expected intersection point (1,1) but got {result.Value.Point}");
+    }
+
+    [Test]
+    public void ShouldCalculateCorrectPositionForLShape5Match()
+    {
+        // Arrange: L-shape 5-match pattern (3 horizontal + 3 vertical with 1 overlap)
+        // Layout:
+        //   [R]       (1, 2)
+        //   [R]       (1, 1)
+        // [R][R][R]   (0,0) (1,0) (2,0)
+        var cornerblock = CreateBlock(1, 0, EBLOCKCOLORTYPE.RED);
+        var xlist = new List<UI_Match_Block>
+        {
+            CreateBlock(0, 0, EBLOCKCOLORTYPE.RED),
+            cornerblock,
+            CreateBlock(2, 0, EBLOCKCOLORTYPE.RED)
+        };
+        var ylist = new List<UI_Match_Block>
+        {
+            cornerblock,
+            CreateBlock(1, 1, EBLOCKCOLORTYPE.RED),
+            CreateBlock(1, 2, EBLOCKCOLORTYPE.RED)
+        };
+        var matchtype = _matchtypeclassifier.ClassifyMatchType(xlist, ylist);
+
+        // Act
+        var result = _specialblockfactory.CreateRequest(xlist, ylist, matchtype, null);
+
+        // Assert
+        Assert.IsTrue(result.HasValue, "Expected special block creation for L-shape 5-match");
+        Assert.AreEqual(EMATCHTYPE.FIVE, result.Value.Type, $"Expected FIVE but got {result.Value.Type}");
+
+        // Expected position should be calculated from ALL 5 unique blocks:
+        // X range: 0 to 2, Y range: 0 to 2
+        // Middle point: ((0+2)/2, (0+2)/2) = (1, 1)
+        Assert.AreEqual((1, 1), result.Value.Point,
+            $"Expected middle point (1,1) for L-shape but got {result.Value.Point}. " +
+            $"Should calculate from all 5 blocks, not just xlist or ylist alone.");
     }
 
     private UI_Match_Block CreateBlock(int x, int y, EBLOCKCOLORTYPE color)
     {
+        if (_testgrid.ContainsKey((x, y)))
+        {
+            return _testgrid[(x, y)];
+        }
+
         var gameobject = new GameObject($"Block_{x}_{y}");
         var block = gameobject.AddComponent<UI_Match_Block>();
 
@@ -188,9 +234,13 @@ public class SpecialBlockFactoryTests
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         colorfield?.SetValue(block, color);
 
-        var pointfield = typeof(UI_Match_Block).GetField("_point",
+        var xfield = typeof(UI_Match_Block).GetField("_x",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        pointfield?.SetValue(block, (x, y));
+        xfield?.SetValue(block, x);
+
+        var yfield = typeof(UI_Match_Block).GetField("_y",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        yfield?.SetValue(block, y);
 
         _testgrid.Add((x, y), block);
         return block;

@@ -22,6 +22,9 @@ public class SpecialBlockFactory
         (int x, int y) spawnpoint = CalculateSpawnPoint(xlist, ylist, matchtype, usermoveblock);
         EBLOCKCOLORTYPE color = DetermineColor(xlist, ylist, matchtype);
 
+        // 디버그 로그: 특수 블록 생성 정보
+        LogSpecialBlockCreation(xlist, ylist, matchtype, usermoveblock, spawnpoint, color);
+
         return new SpecialBlockCreationRequest
         {
             Point = spawnpoint,
@@ -90,5 +93,52 @@ public class SpecialBlockFactory
             return commonslot.GetPoint();
         }
         return (-1, -1);
+    }
+
+    private void LogSpecialBlockCreation(
+        List<UI_Match_Block> xlist,
+        List<UI_Match_Block> ylist,
+        EMATCHTYPE matchtype,
+        UI_Match_Block usermoveblock,
+        (int x, int y) spawnpoint,
+        EBLOCKCOLORTYPE color)
+    {
+        var xpositions = string.Join(", ", xlist.Select(b => $"({b.GetPoint().x},{b.GetPoint().y})"));
+        var ypositions = string.Join(", ", ylist.Select(b => $"({b.GetPoint().x},{b.GetPoint().y})"));
+        var usermove = usermoveblock != null ? $"({usermoveblock.GetPoint().x},{usermoveblock.GetPoint().y})" : "NULL";
+
+        // 모든 고유 블록 위치 계산
+        var allblocks = xlist.Union(ylist).Distinct().ToList();
+        var allpositions = string.Join(", ", allblocks.Select(b => $"({b.GetPoint().x},{b.GetPoint().y})"));
+
+        // 위치 범위 계산
+        if (allblocks.Count > 0)
+        {
+            var xmin = allblocks.Min(b => b.GetPoint().x);
+            var xmax = allblocks.Max(b => b.GetPoint().x);
+            var ymin = allblocks.Min(b => b.GetPoint().y);
+            var ymax = allblocks.Max(b => b.GetPoint().y);
+
+            Debug.Log($"[SpecialBlockFactory] 특수 블록 생성:\n" +
+                      $"  MatchType: {matchtype}\n" +
+                      $"  XList ({xlist.Count}개): [{xpositions}]\n" +
+                      $"  YList ({ylist.Count}개): [{ypositions}]\n" +
+                      $"  All Unique ({allblocks.Count}개): [{allpositions}]\n" +
+                      $"  UserMoveBlock: {usermove}\n" +
+                      $"  Position Range: X({xmin}~{xmax}), Y({ymin}~{ymax})\n" +
+                      $"  Expected Middle: ({(xmin + xmax) / 2}, {(ymin + ymax) / 2})\n" +
+                      $"  Actual SpawnPoint: ({spawnpoint.x}, {spawnpoint.y})\n" +
+                      $"  Color: {color}");
+
+            // 경고: 예상 위치와 실제 위치가 다를 경우
+            var expectedmiddle = ((xmin + xmax) / 2, (ymin + ymax) / 2);
+            if (usermoveblock == null && spawnpoint != expectedmiddle)
+            {
+                Debug.LogWarning($"[SpecialBlockFactory] ⚠️ 위치 불일치 감지!\n" +
+                                $"  예상 중간점: {expectedmiddle}\n" +
+                                $"  실제 생성점: {spawnpoint}\n" +
+                                $"  MatchType: {matchtype}");
+            }
+        }
     }
 }

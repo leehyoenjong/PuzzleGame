@@ -14,6 +14,7 @@ public class MatchFiledManager : MonoBehaviour
 
     Dictionary<(int x, int y), UI_Match_Slot> _matchslotdic = new Dictionary<(int, int), UI_Match_Slot>();
     Dictionary<(int x, int y), UI_Match_Block> _matchblockdic = new Dictionary<(int, int), UI_Match_Block>();
+    GridManager _gridmanager = new GridManager();
 
     public static event Func<Dictionary<(int, int), UI_Match_Block>, int, int, bool> _match_complte_event;//매치 성공 이벤트 
     public static event Func<Dictionary<(int, int), UI_Match_Block>, int, int, bool> _matchsimuration_check_event;//매치 시뮬레이션 체크 이벤트
@@ -94,11 +95,11 @@ public class MatchFiledManager : MonoBehaviour
         await UniTask.WaitUntil(() => _match_setting_check_list.All(x => x.Invoke() == false), cancellationToken: this.GetCancellationTokenOnDestroy());
 
         //새롭게 생성해야할 블록이 있는지 체크
-        var blockList = _matchblockdic.Values.Where(x => x != null).ToList();
+        var blockList = _gridmanager.GetAllBlocks().Where(x => x != null).ToList();
         if (blockList.Count == _mapdata.Count)
         {
             //매치 가능한 블록이 있는지 체크
-            var checksimurationmatchblock = (bool)_matchsimuration_check_event?.Invoke(_matchblockdic, _width, _height);
+            var checksimurationmatchblock = (bool)_matchsimuration_check_event?.Invoke(_gridmanager.GetGridDictionary(), _width, _height);
 
             //매치 가능한 블록이 없다면
             if (checksimurationmatchblock == false)
@@ -138,6 +139,9 @@ public class MatchFiledManager : MonoBehaviour
 
     void CreateMatchSlot()
     {
+        // GridManager 초기화
+        _gridmanager.Initialize(_width, _height);
+
         // 전체 그리드의 중앙점 계산
         var totalWidth = (_width - 1) * _slotsize;
         var totalHeight = (_height - 1) * _slotsize;
@@ -165,6 +169,10 @@ public class MatchFiledManager : MonoBehaviour
                 matchslot.Setting(x, y);
 
                 var key = (x, y);
+                // GridManager에 null 블록 추가
+                _gridmanager.SetBlock(key, null);
+
+                // 레거시 딕셔너리도 초기화 (나중에 제거 예정)
                 if (_matchslotdic.ContainsKey(key) == false)
                 {
                     _matchslotdic.Add(key, null);
@@ -201,9 +209,9 @@ public class MatchFiledManager : MonoBehaviour
                     continue;
                 }
 
-                if (_matchblockdic.ContainsKey(key) && _matchblockdic[key] != null)
+                if (_gridmanager.HasBlock(key) && _gridmanager.GetBlock(key) != null)
                 {
-                    blocklist.Add(_matchblockdic[key]);
+                    blocklist.Add(_gridmanager.GetBlock(key));
                     continue;
                 }
                 //최상위 위에서 생성되서 내려오도록 할 예정
@@ -223,6 +231,21 @@ public class MatchFiledManager : MonoBehaviour
     //특정 위치 개별 생성
     void CreateMatchBlock(int x, int y, EMATCHTYPE matchtype, EBLOCKCOLORTYPE colortypes)
     {
+        // 디버그 로그: 특수 블록 생성 요청 받음
+        Debug.Log($"[MatchFiledManager.CreateMatchBlock] 특수 블록 생성 요청:\n" +
+                  $"  Grid Position: ({x}, {y})\n" +
+                  $"  MatchType: {matchtype}\n" +
+                  $"  ColorType: {colortypes}\n" +
+                  $"  Grid Size: {_width}x{_height}");
+
+        // 위치 검증
+        if (x < 0 || x >= _width || y < 0 || y >= _height)
+        {
+            Debug.LogError($"[MatchFiledManager.CreateMatchBlock] ⚠️ 잘못된 그리드 위치!\n" +
+                          $"  요청 위치: ({x}, {y})\n" +
+                          $"  그리드 범위: X(0~{_width - 1}), Y(0~{_height - 1})");
+        }
+
         // 전체 그리드의 중앙점 계산
         var totalWidth = (_width - 1) * _slotsize;
         var totalHeight = (_height - 1) * _slotsize;
@@ -233,25 +256,30 @@ public class MatchFiledManager : MonoBehaviour
         float posx = startX + x * _slotsize;
         float posy = startY - y * _slotsize;
 
+        Debug.Log($"[MatchFiledManager.CreateMatchBlock] 월드 좌표 변환:\n" +
+                  $"  Grid: ({x}, {y}) → World: ({posx:F2}, {posy:F2})");
+
         var block = _block_create_event.Invoke(matchtype, _blockparent);
         var movepoint = new Vector2(posx, posy);
         block.Setting(movepoint);
         block.ChangePoint(x, y, movepoint, true);
         block.SettingColorTypes(colortypes);
+
+        Debug.Log($"[MatchFiledManager.CreateMatchBlock] 특수 블록 생성 완료: {block.name} at ({x}, {y})");
     }
 
     //전체 이동
     async void WaitAndMove()
     {
         await UniTask.WaitForSeconds(0.25f, cancellationToken: this.GetCancellationTokenOnDestroy());
-        _match_complte_event?.Invoke(_matchblockdic, _width, _height);
+        _match_complte_event?.Invoke(_gridmanager.GetGridDictionary(), _width, _height);
         FiledReSetting().Forget();
     }
 
     //개별 이동
     void WaitAndMove(UI_Match_Block pointdownblock, UI_Match_Block enterblock)
     {
-        _block_move_event?.Invoke(_matchblockdic, pointdownblock, enterblock, _width, _height);
+        _block_move_event?.Invoke(_gridmanager.GetGridDictionary(), pointdownblock, enterblock, _width, _height);
         FiledReSetting().Forget();
     }
 
@@ -279,7 +307,7 @@ public class MatchFiledManager : MonoBehaviour
                 }
 
                 //밑에서부터 체크하기 때문에 블록이 있다면 밑에 자리가 있는 것이기에 continue
-                if (_matchblockdic.ContainsKey(key) && _matchblockdic[key] != null)
+                if (_gridmanager.HasBlock(key) && _gridmanager.GetBlock(key) != null)
                 {
                     continue;
                 }
@@ -321,13 +349,13 @@ public class MatchFiledManager : MonoBehaviour
 
     void ChangeIDX(int x, int y, UI_Match_Block block)
     {
-        if (_matchblockdic.TryGetValue((x, y), out var origin))
+        var origin = _gridmanager.GetBlock((x, y));
+
+        // 새 위치에 블록 설정
+        _gridmanager.SetBlock((x, y), block);
+        if (Application.isEditor)
         {
-            _matchblockdic[(x, y)] = block;
-            if (Application.isEditor)
-            {
-                block.name = $"{x}_{y}";
-            }
+            block.name = $"{x}_{y}";
         }
 
         var point = block.GetPoint();
@@ -335,16 +363,37 @@ public class MatchFiledManager : MonoBehaviour
         {
             return;
         }
-        _matchblockdic[(point.x, point.y)] = origin;
+
+        // 이전 위치에 origin 블록 설정
+        _gridmanager.SetBlock((point.x, point.y), origin);
 
         if (origin != null && Application.isEditor)
         {
-            _matchblockdic[(point.x, point.y)].name = $"{x}_{y}";
+            origin.name = $"{point.x}_{point.y}";
+        }
+
+        // 레거시 딕셔너리도 동기화 (나중에 제거 예정)
+        if (_matchblockdic.ContainsKey((x, y)))
+        {
+            _matchblockdic[(x, y)] = block;
+        }
+        if (_matchblockdic.ContainsKey((point.x, point.y)))
+        {
+            _matchblockdic[(point.x, point.y)] = origin;
         }
     }
 
     void RemoveIDX(UI_Match_Block block)
     {
-        _matchblockdic[block.GetPoint()] = null;
+        var point = block.GetPoint();
+
+        // GridManager를 사용하여 블록을 null로 설정
+        _gridmanager.SetBlock(point, null);
+
+        // 레거시 딕셔너리도 동기화 (나중에 제거 예정)
+        if (_matchblockdic.ContainsKey(point))
+        {
+            _matchblockdic[point] = null;
+        }
     }
 }
