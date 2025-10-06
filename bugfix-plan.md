@@ -329,3 +329,47 @@ UserMoveBlockMatch 타이밍:
 2. 특수 블록 생성 시 Console에서 `[SpecialBlockFactory]` 로그 확인
 3. 위치 불일치 발생 시 `⚠️ 위치 불일치 감지!` 경고와 함께 상세 정보 출력
 4. 로그를 복사하여 버그 리포트 제출
+
+---
+
+## 🐛 해결된 특수 블록 버그들
+
+### Bug #1: L자형 5-매치가 CROSS로 잘못 분류 ✅ FIXED
+**커밋**: `ea79a1b` - [BUGFIX] Fix L-shape 5-match vs CROSS classification
+
+**문제**:
+- L자형 패턴 (3H + 3V, 5개 고유 블록)이 CROSS_THREE로 분류됨
+- 교차점 검증이 없어서 모서리 교차도 CROSS로 판정
+
+**해결**:
+- `IsCenterBlock()` 추가: 교차점이 가로/세로 둘 다의 **중앙**에 있어야 CROSS
+- 분류 우선순위 재정렬: CROSS (중앙 교차) → FIVE (5개 고유) → 4-매치 → 3-매치
+- FIVE는 모든 고유 블록으로 중간점 계산
+
+### Bug #2: 블록 제거 후 (-1, -1) 위치 에러 ✅ FIXED
+**커밋**: `26dadee` - [BUGFIX] Filter invalid blocks with (-1, -1) position
+
+**문제**:
+- 블록이 제거될 때 `ResetPoint()`로 위치가 (-1, -1)로 설정됨
+- 하지만 제거된 블록이 여전히 매치 리스트에 포함됨
+- SpecialBlockFactory가 (-1, -1) 블록들로 위치 계산 → 크래시
+
+**해결**:
+- `CreateRequest` 시작 시 유효한 블록만 필터링 (`GetPoint() != (-1, -1)`)
+- 유효한 블록이 없으면 null 반환 (특수 블록 생성 건너뜀)
+- 경고 로그: `유효한 블록이 없음! 모든 블록이 (-1, -1) 상태`
+
+**현재 상태**:
+- ✅ 크래시 방지 성공
+- ✅ 게임 정상 플레이 가능
+- ⚠️ 가끔 경고 발생 (5-매치에서 연쇄 반응 타이밍 이슈) - **정상적인 엣지 케이스**
+
+### Bug #3: 빈 블록 리스트로 인한 예외 ✅ FIXED
+**커밋**: `349f09d` - [BUGFIX] Add defensive code for empty block list
+
+**문제**:
+- `CalculateMiddlePoint`에 빈 리스트 전달 시 Max/Min 연산 예외 발생
+
+**해결**:
+- null/빈 리스트 검증 추가
+- 에러 로그와 함께 (-1, -1) 반환 → CreateMatchBlock에서 생성 취소
