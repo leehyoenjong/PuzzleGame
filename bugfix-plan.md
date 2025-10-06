@@ -112,11 +112,20 @@ public List<(int, int)> DetectHorizontalMatch(grid, startposition)
 
 **커밋**: `b180e1a` - [TEST] Add comprehensive AllBlockMatch grid scanning tests
 
-#### Test 2.2: 매치 결과 정규화
-- [ ] 테스트: 같은 매치를 다른 위치에서 스캔해도 동일한 결과여야 함
-- [ ] 테스트: 매치 결과는 항상 정렬된 순서여야 함 (좌→우, 하→상)
-- [ ] 구현: 매치 결과를 정규화하는 메서드 추가
-- [ ] 구현: 중복 매치를 HashSet으로 필터링
+#### Test 2.2: 매치 결과 정규화 ✅
+- [x] 테스트: 같은 매치를 다른 위치에서 스캔해도 동일한 결과여야 함
+- [x] 테스트: 매치 결과는 항상 정렬된 순서여야 함 (좌→우, 하→상)
+- [x] 구현: 매치 결과를 정규화하는 메서드 추가 (이미 구현됨 - Insert(0) + Add 패턴)
+- [x] 구현: 중복 매치를 HashSet으로 필터링 (Phase 1.2에서 이미 완료)
+
+**구현 완료**:
+- `AllBlockMatchTests.cs`: `ShouldReturnIdenticalResultsFromDifferentScanPositions` 테스트 추가
+- `AllBlockMatchTests.cs`: `ShouldReturnMatchResultsInSortedOrder` 테스트 추가
+- `MatchDetector.DetectHorizontalMatch()`: Insert(0) + Add 패턴으로 좌→우 정렬 보장
+- `MatchDetector.DetectVerticalMatch()`: Insert(0) + Add 패턴으로 하→상 정렬 보장
+- 모든 테스트 통과 확인
+
+**다음 커밋 예정**: Phase 2 Test 2.2 완료 커밋
 
 ---
 

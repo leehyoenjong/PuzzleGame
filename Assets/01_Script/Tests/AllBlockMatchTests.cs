@@ -316,6 +316,80 @@ public class AllBlockMatchTests
         Assert.IsTrue(processedblocks.Contains(_testgrid[(0, 2)]), "Should process (0,2)");
     }
 
+    [Test]
+    public void ShouldReturnIdenticalResultsFromDifferentScanPositions()
+    {
+        // Arrange: Create 3-match [R][R][R]
+        CreateBlockAt(0, 0, EBLOCKCOLORTYPE.RED);
+        CreateBlockAt(1, 0, EBLOCKCOLORTYPE.RED);
+        CreateBlockAt(2, 0, EBLOCKCOLORTYPE.RED);
+
+        // Act: Detect match from all three positions
+        var matchfromstart = _matchdetector.DetectHorizontalMatch(_testgrid, (0, 0));
+        var matchfrommiddle = _matchdetector.DetectHorizontalMatch(_testgrid, (1, 0));
+        var matchfromend = _matchdetector.DetectHorizontalMatch(_testgrid, (2, 0));
+
+        // Assert: All should return the same positions
+        Assert.IsNotNull(matchfromstart, "Should detect from start");
+        Assert.IsNotNull(matchfrommiddle, "Should detect from middle");
+        Assert.IsNotNull(matchfromend, "Should detect from end");
+
+        Assert.AreEqual(3, matchfromstart.Count, "Start should have 3 positions");
+        Assert.AreEqual(3, matchfrommiddle.Count, "Middle should have 3 positions");
+        Assert.AreEqual(3, matchfromend.Count, "End should have 3 positions");
+
+        // All results should contain the same positions
+        Assert.IsTrue(matchfromstart.Contains((0, 0)), "Start result should contain (0,0)");
+        Assert.IsTrue(matchfromstart.Contains((1, 0)), "Start result should contain (1,0)");
+        Assert.IsTrue(matchfromstart.Contains((2, 0)), "Start result should contain (2,0)");
+
+        Assert.IsTrue(matchfrommiddle.Contains((0, 0)), "Middle result should contain (0,0)");
+        Assert.IsTrue(matchfrommiddle.Contains((1, 0)), "Middle result should contain (1,0)");
+        Assert.IsTrue(matchfrommiddle.Contains((2, 0)), "Middle result should contain (2,0)");
+
+        Assert.IsTrue(matchfromend.Contains((0, 0)), "End result should contain (0,0)");
+        Assert.IsTrue(matchfromend.Contains((1, 0)), "End result should contain (1,0)");
+        Assert.IsTrue(matchfromend.Contains((2, 0)), "End result should contain (2,0)");
+    }
+
+    [Test]
+    public void ShouldReturnMatchResultsInSortedOrder()
+    {
+        // Arrange: Create horizontal 4-match
+        CreateBlockAt(0, 0, EBLOCKCOLORTYPE.RED);
+        CreateBlockAt(1, 0, EBLOCKCOLORTYPE.RED);
+        CreateBlockAt(2, 0, EBLOCKCOLORTYPE.RED);
+        CreateBlockAt(3, 0, EBLOCKCOLORTYPE.RED);
+
+        // Act: Detect from middle position
+        var horizontalmatch = _matchdetector.DetectHorizontalMatch(_testgrid, (2, 0));
+
+        // Assert: Should be sorted left to right
+        Assert.IsNotNull(horizontalmatch, "Should detect match");
+        Assert.AreEqual(4, horizontalmatch.Count, "Should have 4 positions");
+        Assert.AreEqual((0, 0), horizontalmatch[0], "First should be (0,0)");
+        Assert.AreEqual((1, 0), horizontalmatch[1], "Second should be (1,0)");
+        Assert.AreEqual((2, 0), horizontalmatch[2], "Third should be (2,0)");
+        Assert.AreEqual((3, 0), horizontalmatch[3], "Fourth should be (3,0)");
+
+        // Arrange: Create vertical 4-match
+        CreateBlockAt(0, 1, EBLOCKCOLORTYPE.BLUE);
+        CreateBlockAt(0, 2, EBLOCKCOLORTYPE.BLUE);
+        CreateBlockAt(0, 3, EBLOCKCOLORTYPE.BLUE);
+        CreateBlockAt(0, 4, EBLOCKCOLORTYPE.BLUE);
+
+        // Act: Detect from middle position
+        var verticalmatch = _matchdetector.DetectVerticalMatch(_testgrid, (0, 3));
+
+        // Assert: Should be sorted bottom to top (down to up)
+        Assert.IsNotNull(verticalmatch, "Should detect vertical match");
+        Assert.AreEqual(4, verticalmatch.Count, "Should have 4 positions");
+        Assert.AreEqual((0, 1), verticalmatch[0], "First should be (0,1)");
+        Assert.AreEqual((0, 2), verticalmatch[1], "Second should be (0,2)");
+        Assert.AreEqual((0, 3), verticalmatch[2], "Third should be (0,3)");
+        Assert.AreEqual((0, 4), verticalmatch[3], "Fourth should be (0,4)");
+    }
+
     private void CreateBlockAt(int x, int y, EBLOCKCOLORTYPE color)
     {
         var gameobject = new GameObject($"Block_{x}_{y}");
