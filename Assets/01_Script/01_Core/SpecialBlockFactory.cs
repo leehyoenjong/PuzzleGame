@@ -48,8 +48,12 @@ public class SpecialBlockFactory
         {
             case EMATCHTYPE.FORE_LEFTRIGHT:
             case EMATCHTYPE.FORE_UPDOWN:
-            case EMATCHTYPE.FIVE:
                 return CalculateMiddlePoint(xlist.Count > 0 ? xlist : ylist);
+
+            case EMATCHTYPE.FIVE:
+                // FIVE는 모든 고유 블록을 합쳐서 중간점 계산 (L자형 포함)
+                var allblocks = xlist.Union(ylist).Distinct().ToList();
+                return CalculateMiddlePoint(allblocks);
 
             case EMATCHTYPE.CROSS_THREE:
             case EMATCHTYPE.CROSS_FOUR:
@@ -92,7 +96,11 @@ public class SpecialBlockFactory
         {
             return commonslot.GetPoint();
         }
-        return (-1, -1);
+
+        // Fallback: 교차점을 찾지 못하면 전체 블록의 중간점 사용
+        Debug.LogWarning($"[SpecialBlockFactory] 교차점을 찾지 못함! Fallback으로 중간점 계산. xlist={xlist.Count}, ylist={ylist.Count}");
+        var allblocks = xlist.Union(ylist).Distinct().ToList();
+        return CalculateMiddlePoint(allblocks);
     }
 
     private void LogSpecialBlockCreation(

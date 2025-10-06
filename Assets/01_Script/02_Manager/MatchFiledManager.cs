@@ -238,12 +238,14 @@ public class MatchFiledManager : MonoBehaviour
                   $"  ColorType: {colortypes}\n" +
                   $"  Grid Size: {_width}x{_height}");
 
-        // 위치 검증
+        // 위치 검증 및 조기 반환
         if (x < 0 || x >= _width || y < 0 || y >= _height)
         {
-            Debug.LogError($"[MatchFiledManager.CreateMatchBlock] ⚠️ 잘못된 그리드 위치!\n" +
+            Debug.LogError($"[MatchFiledManager.CreateMatchBlock] ⚠️ 잘못된 그리드 위치! 특수 블록 생성 취소.\n" +
                           $"  요청 위치: ({x}, {y})\n" +
-                          $"  그리드 범위: X(0~{_width - 1}), Y(0~{_height - 1})");
+                          $"  그리드 범위: X(0~{_width - 1}), Y(0~{_height - 1})\n" +
+                          $"  MatchType: {matchtype}");
+            return; // 생성 취소
         }
 
         // 전체 그리드의 중앙점 계산

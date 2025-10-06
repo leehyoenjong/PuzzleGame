@@ -202,14 +202,79 @@ public class MatchTypeClassifierTests
         Assert.AreEqual(EMATCHTYPE.THREE, result);
     }
 
+    [Test]
+    public void ShouldClassifyLShape5MatchAsFive()
+    {
+        // L-shape: 3 horizontal + 3 vertical with 1 overlap = 5 unique blocks
+        // Layout:
+        //   [R]       (1, 2)
+        //   [R]       (1, 1)
+        // [R][R][R]   (0,0) (1,0) (2,0)
+        var cornerblock = CreateBlock(1, 0, EBLOCKCOLORTYPE.RED);
+        var xlist = new List<UI_Match_Block>
+        {
+            CreateBlock(0, 0, EBLOCKCOLORTYPE.RED),
+            cornerblock,
+            CreateBlock(2, 0, EBLOCKCOLORTYPE.RED)
+        };
+        var ylist = new List<UI_Match_Block>
+        {
+            cornerblock,
+            CreateBlock(1, 1, EBLOCKCOLORTYPE.RED),
+            CreateBlock(1, 2, EBLOCKCOLORTYPE.RED)
+        };
+
+        var result = _matchtypeclassifier.ClassifyMatchType(xlist, ylist);
+
+        Assert.AreEqual(EMATCHTYPE.FIVE, result,
+            "L-shape with 5 unique blocks should be classified as FIVE, not CROSS_THREE");
+    }
+
+    [Test]
+    public void ShouldClassifyCrossOnlyWhenIntersectionExists()
+    {
+        // True CROSS: Must have exactly 1 intersection point
+        var centerblock = CreateBlock(1, 1, EBLOCKCOLORTYPE.RED);
+        var xlist = new List<UI_Match_Block>
+        {
+            CreateBlock(0, 1, EBLOCKCOLORTYPE.RED),
+            centerblock,
+            CreateBlock(2, 1, EBLOCKCOLORTYPE.RED)
+        };
+        var ylist = new List<UI_Match_Block>
+        {
+            CreateBlock(1, 0, EBLOCKCOLORTYPE.RED),
+            centerblock,
+            CreateBlock(1, 2, EBLOCKCOLORTYPE.RED)
+        };
+
+        var result = _matchtypeclassifier.ClassifyMatchType(xlist, ylist);
+
+        Assert.AreEqual(EMATCHTYPE.CROSS_THREE, result,
+            "3x3 pattern with center intersection should be CROSS_THREE");
+    }
+
     private UI_Match_Block CreateBlock(int x, int y, EBLOCKCOLORTYPE color)
     {
+        if (_testgrid.ContainsKey((x, y)))
+        {
+            return _testgrid[(x, y)];
+        }
+
         var gameobject = new GameObject($"Block_{x}_{y}");
         var block = gameobject.AddComponent<UI_Match_Block>();
 
         var colorfield = typeof(UI_Match_Block).GetField("_colortypes",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         colorfield?.SetValue(block, color);
+
+        var xfield = typeof(UI_Match_Block).GetField("_x",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        xfield?.SetValue(block, x);
+
+        var yfield = typeof(UI_Match_Block).GetField("_y",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        yfield?.SetValue(block, y);
 
         _testgrid.Add((x, y), block);
         return block;
