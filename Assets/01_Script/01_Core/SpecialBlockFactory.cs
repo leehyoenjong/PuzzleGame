@@ -81,6 +81,12 @@ public class SpecialBlockFactory
 
     private (int x, int y) CalculateMiddlePoint(List<UI_Match_Block> slotlist)
     {
+        if (slotlist == null || slotlist.Count == 0)
+        {
+            Debug.LogError("[SpecialBlockFactory] CalculateMiddlePoint: 빈 리스트 전달됨!");
+            return (-1, -1);
+        }
+
         var xmax = slotlist.Max(block => block.GetPoint().x);
         var xmin = slotlist.Min(block => block.GetPoint().x);
         var ymax = slotlist.Max(block => block.GetPoint().y);
