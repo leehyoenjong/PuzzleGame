@@ -19,11 +19,22 @@ public class SpecialBlockFactory
             return null;
         }
 
-        (int x, int y) spawnpoint = CalculateSpawnPoint(xlist, ylist, matchtype, usermoveblock);
-        EBLOCKCOLORTYPE color = DetermineColor(xlist, ylist, matchtype);
+        // 유효한 블록만 필터링 (위치가 (-1, -1)인 블록 제거)
+        var validxlist = xlist.Where(b => b != null && b.GetPoint() != (-1, -1)).ToList();
+        var validylist = ylist.Where(b => b != null && b.GetPoint() != (-1, -1)).ToList();
+
+        // 유효한 블록이 없으면 생성 불가
+        if (validxlist.Count == 0 && validylist.Count == 0)
+        {
+            Debug.LogWarning($"[SpecialBlockFactory] 유효한 블록이 없음! 모든 블록이 (-1, -1) 상태. MatchType: {matchtype}");
+            return null;
+        }
+
+        (int x, int y) spawnpoint = CalculateSpawnPoint(validxlist, validylist, matchtype, usermoveblock);
+        EBLOCKCOLORTYPE color = DetermineColor(validxlist, validylist, matchtype);
 
         // 디버그 로그: 특수 블록 생성 정보
-        LogSpecialBlockCreation(xlist, ylist, matchtype, usermoveblock, spawnpoint, color);
+        LogSpecialBlockCreation(validxlist, validylist, matchtype, usermoveblock, spawnpoint, color);
 
         return new SpecialBlockCreationRequest
         {
