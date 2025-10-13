@@ -100,48 +100,56 @@ public class MatchManager : MonoBehaviour
         int key_y = 0;
         int key_x = 0;
 
-        List<UI_Match_Block> xlist = new List<UI_Match_Block>();
-        List<UI_Match_Block> ylist = new List<UI_Match_Block>();
-        var processedblocks = new HashSet<UI_Match_Block>();
+        // 전체 파괴 블록 누적 (블록 제거용)
+        List<UI_Match_Block> alldestroyblocks = new List<UI_Match_Block>();
+        // 특수 블록 생성 요청 누적 (블록 제거 후 생성용)
+        var creationRequests = new List<SpecialBlockCreationRequest>();
+        // 처리된 매치 위치 추적 (중복 방지용) - 블록이 아닌 매치 패턴 자체를 추적
+        var processedmatches = new HashSet<string>();
 
         for (int i = 0; i < maxcount; i++)
         {
-            // Skip if this position's block is already processed
-            if (matchblockdic.ContainsKey((key_x, key_y)) && processedblocks.Contains(matchblockdic[(key_x, key_y)]))
-            {
-                //매치 실패 시 다음 칸으로 이동
-                key_x++;
-                //크기만큼 도달했다면 다 확인한 것이기 때문에 y값을 증가시키고 x값 초기화
-                if (key_x >= width)
-                {
-                    key_x = 0;
-                    key_y++;
-                }
-                continue;
-            }
-
             var matchresult = GetMatchBlock(key_x, key_y, width, height, matchblockdic);
 
             //매치 성공
             if (matchresult.matchblocklist_x.Count >= 3 || matchresult.matchblocklist_y.Count >= 3)
             {
-                //타입별 매칭 처리
-                GetMatchTypeFuction(matchresult.matchblocklist_x, matchblockdic);
-                GetMatchTypeFuction(matchresult.matchblocklist_y, matchblockdic);
+                // ✅ 수정: 매치 시그니처 생성 (중복 매치 방지)
+                // xlist와 ylist의 모든 블록 위치를 정렬하여 고유 키 생성
+                var allmatchblocks = matchresult.matchblocklist_x.Union(matchresult.matchblocklist_y).Distinct().ToList();
+                var matchsignature = string.Join(",", allmatchblocks.Select(b => $"{b.GetPoint().x}_{b.GetPoint().y}").OrderBy(s => s));
 
-                //매칭 성공하면 위치는 고정하고 매칭 성공 처리 진행
-                xlist.AddRange(matchresult.matchblocklist_x);
-                ylist.AddRange(matchresult.matchblocklist_y);
+                // 이미 처리한 매치 패턴이면 건너뛰기
+                if (processedmatches.Contains(matchsignature))
+                {
+                    //매치 실패 시 다음 칸으로 이동
+                    key_x++;
+                    if (key_x >= width)
+                    {
+                        key_x = 0;
+                        key_y++;
+                    }
+                    continue;
+                }
 
-                // Mark all matched blocks as processed
-                foreach (var block in matchresult.matchblocklist_x)
+                processedmatches.Add(matchsignature);
+
+                // 1. 타입 분류 및 특수 블록 생성 요청 수집
+                var matchtype = _matchtypeclassifier.ClassifyMatchType(matchresult.matchblocklist_x, matchresult.matchblocklist_y);
+                var creationrequest = _specialblockfactory.CreateRequest(
+                    matchresult.matchblocklist_x,
+                    matchresult.matchblocklist_y,
+                    matchtype,
+                    usermoveblock: null);
+
+                if (creationrequest.HasValue)
                 {
-                    processedblocks.Add(block);
+                    creationRequests.Add(creationrequest.Value);
                 }
-                foreach (var block in matchresult.matchblocklist_y)
-                {
-                    processedblocks.Add(block);
-                }
+
+                // 2. 파괴 블록 리스트에 추가
+                alldestroyblocks.AddRange(matchresult.matchblocklist_x);
+                alldestroyblocks.AddRange(matchresult.matchblocklist_y);
 
                 //매치를 성공하고도 return하지 않는 이유는 모든 블록 매치를 체크해야하기 때문
                 successmatch = true;
@@ -156,10 +164,23 @@ public class MatchManager : MonoBehaviour
                 key_y++;
             }
         }
+
         if (successmatch)
         {
-            MatchComplte(xlist.Distinct().ToList(), ylist.Distinct().ToList());
+            // --- 1단계: 특수 블록 연쇄 반응 처리 (UserMoveBlockMatch와 동일)
+            var distinctBlocksToDestroy = alldestroyblocks.Distinct().ToList();
+            var finalBlocksToDestroy = _chainreactionprocessor.ProcessChainReaction(distinctBlocksToDestroy, matchblockdic);
+
+            // --- 2단계: 파괴 (블록 제거 이벤트 발생)
+            SetMatchBlock(finalBlocksToDestroy, new List<UI_Match_Block>());
+
+            // --- 3단계: 생성 (블록 제거 후 특수 블록 생성)
+            foreach (var req in creationRequests)
+            {
+                _match_complte_createblock_event?.Invoke(req.Point.x, req.Point.y, req.Type, req.Color);
+            }
         }
+
         _ismatching = false;
         return successmatch;
     }

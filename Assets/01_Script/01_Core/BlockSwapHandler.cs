@@ -11,6 +11,12 @@ public class BlockSwapHandler
         var block1 = grid[pos1];
         var block2 = grid[pos2];
 
+        // null 블록 체크
+        if (block1 == null || block2 == null)
+        {
+            throw new System.NullReferenceException("Cannot swap null blocks");
+        }
+
         // 딕셔너리에서 위치 교환
         grid[pos1] = block2;
         grid[pos2] = block1;

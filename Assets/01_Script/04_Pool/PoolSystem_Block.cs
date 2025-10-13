@@ -76,10 +76,3 @@ public class PoolSystem_Block : MonoBehaviour
         blockpool.Enqueue(relelseblock);
     }
 }
-
-[Serializable]
-public struct St_BlockData
-{
-    public EMATCHTYPE _blocktypes;
-    public GameObject _blockobject;
-}

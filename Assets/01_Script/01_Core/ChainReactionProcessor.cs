@@ -38,6 +38,12 @@ public class ChainReactionProcessor
 
     public List<UI_Match_Block> ProcessChainReaction(List<UI_Match_Block> initialblocks, Dictionary<(int, int), UI_Match_Block> matchblockdic)
     {
+        // null 블록 리스트 방어 코드
+        if (initialblocks == null)
+        {
+            return new List<UI_Match_Block>();
+        }
+
         var finaldestroylist = new HashSet<UI_Match_Block>();
         var processedblocks = new HashSet<UI_Match_Block>();
         var processqueue = new Queue<(UI_Match_Block block, EBLOCKCOLORTYPE inheritedcolor)>();
@@ -47,12 +53,43 @@ public class ChainReactionProcessor
         // 초기 블록들을 처리
         foreach (var block in initialblocks)
         {
+            // null 블록은 건너뛰기
+            if (block == null)
+            {
+                UnityEngine.Debug.Log($"[ProcessChainReaction] Skipping null block");
+                continue;
+            }
+
             finaldestroylist.Add(block);
             UnityEngine.Debug.Log($"[ProcessChainReaction] Added initial block at ({block.GetPoint().x}, {block.GetPoint().y}): {block.GetBlockMatchTypes()}");
 
             if (IsSpecialBlock(block))
             {
-                processqueue.Enqueue((block, block.GetBlockColorTypes()));
+                // FIVE 블록이 일반 블록과 함께 매치될 때 색상 결정
+                EBLOCKCOLORTYPE inheritedcolor;
+                if (block.GetBlockMatchTypes() == EMATCHTYPE.FIVE)
+                {
+                    // 초기 블록 리스트에서 일반 블록(THREE)의 색상을 찾기
+                    var regularblock = initialblocks.FirstOrDefault(b => b != null && b.GetBlockMatchTypes() == EMATCHTYPE.THREE);
+                    if (regularblock != null)
+                    {
+                        // 일반 블록의 색상 사용
+                        inheritedcolor = regularblock.GetBlockColorTypes();
+                    }
+                    else
+                    {
+                        // 일반 블록이 없으면 FIVE 블록 자신의 색상 사용
+                        // (FIVE끼리 매치되거나 FIVE 단독인 경우)
+                        inheritedcolor = block.GetBlockColorTypes();
+                    }
+                }
+                else
+                {
+                    // FIVE가 아닌 특수 블록은 자신의 색상 사용
+                    inheritedcolor = block.GetBlockColorTypes();
+                }
+
+                processqueue.Enqueue((block, inheritedcolor));
                 UnityEngine.Debug.Log($"[ProcessChainReaction] Enqueued special block at ({block.GetPoint().x}, {block.GetPoint().y})");
             }
         }
@@ -81,13 +118,17 @@ public class ChainReactionProcessor
                     UnityEngine.Debug.Log($"[ProcessChainReaction] FORE effect affected {blocksaffectedbyeffect.Count} blocks");
                     break;
                 case EMATCHTYPE.FIVE:
-                    // FORE 블록에서 색상을 물려받았는지 확인
-                    var colortomatch = inheritedcolor != EBLOCKCOLORTYPE.FIVE ? inheritedcolor : currentblock.GetBlockColorTypes();
-                    if (colortomatch == EBLOCKCOLORTYPE.FIVE)
+                    // 상속받은 색상 확인
+                    EBLOCKCOLORTYPE colortomatch;
+                    if (inheritedcolor == EBLOCKCOLORTYPE.FIVE)
                     {
-                        // FIVE 블록이 다른 FIVE블록과 만나 파괴되는 경우,
-                        // 임의의 색상(예: RED)을 지정하거나 다른 규칙 필요. 여기서는 RED로 가정
+                        // FIVE 색상이면 fallback으로 RED 사용
                         colortomatch = EBLOCKCOLORTYPE.RED;
+                    }
+                    else
+                    {
+                        // 일반 색상이면 그대로 사용
+                        colortomatch = inheritedcolor;
                     }
                     blocksaffectedbyeffect.AddRange(ProcessFiveMatch(colortomatch, matchblockdic));
                     UnityEngine.Debug.Log($"[ProcessChainReaction] FIVE effect affected {blocksaffectedbyeffect.Count} blocks with color {colortomatch}");
@@ -145,6 +186,13 @@ public class ChainReactionProcessor
     private List<UI_Match_Block> ProcessForeMatch(UI_Match_Block currentblock, Dictionary<(int, int), UI_Match_Block> matchblockdic)
     {
         var breaklist = new List<UI_Match_Block>();
+
+        // null 그리드 방어 코드
+        if (matchblockdic == null)
+        {
+            return breaklist;
+        }
+
         var currentpoint = currentblock.GetPoint();
         var blocktype = currentblock.GetBlockMatchTypes();
 
@@ -176,6 +224,12 @@ public class ChainReactionProcessor
 
     private List<UI_Match_Block> ProcessFiveMatch(EBLOCKCOLORTYPE colortype, Dictionary<(int, int), UI_Match_Block> matchblockdic)
     {
+        // null 그리드 방어 코드
+        if (matchblockdic == null)
+        {
+            return new List<UI_Match_Block>();
+        }
+
         var colorlist = matchblockdic.Where(x => x.Value != null).Where(x => x.Value.GetBlockColorTypes() == colortype).Select(x => x.Value).ToList();
         return colorlist;
     }
@@ -183,6 +237,13 @@ public class ChainReactionProcessor
     private List<UI_Match_Block> ProcessCrossMatch(int startindex, int endindex, UI_Match_Block boomblock, Dictionary<(int, int), UI_Match_Block> matchblockdic)
     {
         var breaklist = new List<UI_Match_Block>();
+
+        // null 그리드 방어 코드
+        if (matchblockdic == null)
+        {
+            return breaklist;
+        }
+
         var point = boomblock.GetPoint();
 
         for (int y = startindex; y < endindex; y++)

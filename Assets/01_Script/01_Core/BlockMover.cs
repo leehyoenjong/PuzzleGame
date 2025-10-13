@@ -6,6 +6,12 @@ public class BlockMover
 {
     public void MoveBlocksDown(GridManager gridmanager)
     {
+        // null GridManager 방어 코드
+        if (gridmanager == null)
+        {
+            return;
+        }
+
         bool hasmoved = true;
 
         // 더 이상 이동할 블록이 없을 때까지 반복

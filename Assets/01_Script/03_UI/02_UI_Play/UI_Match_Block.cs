@@ -25,7 +25,7 @@ public class UI_Match_Block : MonoBehaviour
     private Tween _currentScaleTween;
 
     //타입
-    EBLOCKCOLORTYPE _colortypes;
+    [SerializeField] EBLOCKCOLORTYPE _colortypes;
     public EBLOCKCOLORTYPE GetBlockColorTypes() => _colortypes;
 
     int _x, _y;

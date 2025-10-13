@@ -105,3 +105,10 @@ public struct St_ChapterData
         return (width, height, mapdata, topslotlistxy);
     }
 }
+
+[Serializable]
+public struct St_BlockData
+{
+    public EMATCHTYPE _blocktypes;
+    public GameObject _blockobject;
+}

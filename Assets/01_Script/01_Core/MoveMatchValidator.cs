@@ -15,8 +15,36 @@ public class MoveMatchValidator
 
     public bool ValidateMove(Dictionary<(int, int), UI_Match_Block> grid, (int, int) pos1, (int, int) pos2)
     {
+        // 같은 위치는 교환할 수 없음
+        if (pos1 == pos2)
+        {
+            return false;
+        }
+
+        // 인접한 위치인지 검증 (가로 또는 세로로 1칸 차이만 허용)
+        int xdiff = System.Math.Abs(pos1.Item1 - pos2.Item1);
+        int ydiff = System.Math.Abs(pos1.Item2 - pos2.Item2);
+
+        bool isadjacent = (xdiff == 1 && ydiff == 0) || (xdiff == 0 && ydiff == 1);
+        if (!isadjacent)
+        {
+            return false;
+        }
+
+        // 그리드에 두 위치가 모두 존재하는지 검증
+        if (!grid.ContainsKey(pos1) || !grid.ContainsKey(pos2))
+        {
+            return false;
+        }
+
         var block1 = grid[pos1];
         var block2 = grid[pos2];
+
+        // null 블록 검증
+        if (block1 == null || block2 == null)
+        {
+            return false;
+        }
 
         // FIVE 블록은 어떤 블록과도 교환 가능
         if (block1.GetBlockMatchTypes() == EMATCHTYPE.FIVE || block2.GetBlockMatchTypes() == EMATCHTYPE.FIVE)

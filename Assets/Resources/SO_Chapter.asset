@@ -58,3 +58,12 @@ MonoBehaviour:
     _over_condition:
       _condtion: 0
       _movecount: 20
+  - _chapternumber: 5
+    _chapterdata: {fileID: 0}
+    _clear_condition:
+      _condtion: 0
+      _score: 1000
+      _blockbreak: 0
+    _over_condition:
+      _condtion: 0
+      _movecount: 20

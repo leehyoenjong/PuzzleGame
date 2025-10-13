@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="4" result="Passed" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2025-10-12 15:58:35Z" end-time="2025-10-12 15:58:35Z" duration="0.0397979">
+  <test-suite type="TestSuite" id="1000" name="PuzzleGame" fullname="PuzzleGame" runstate="Runnable" testcasecount="213" result="Passed" start-time="2025-10-12 15:58:35Z" end-time="2025-10-12 15:58:35Z" duration="0.039798" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1230" name="Tests.dll" fullname="/Users/ihyeonjong/Desktop/Git/PuzzleGame/Library/ScriptAssemblies/Tests.dll" runstate="Runnable" testcasecount="213" result="Passed" start-time="2025-10-12 15:58:35Z" end-time="2025-10-12 15:58:35Z" duration="0.032362" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="77871" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestFixture" id="1068" name="EdgeCaseTests" fullname="EdgeCaseTests" classname="EdgeCaseTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2025-10-12 15:58:35Z" end-time="2025-10-12 15:58:35Z" duration="0.029859" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1069" name="ShouldHandleAlreadyRemovedBlocksInChainReaction" fullname="EdgeCaseTests.ShouldHandleAlreadyRemovedBlocksInChainReaction" methodname="ShouldHandleAlreadyRemovedBlocksInChainReaction" classname="EdgeCaseTests" runstate="Runnable" seed="617298540" result="Passed" start-time="2025-10-12 15:58:35Z" end-time="2025-10-12 15:58:35Z" duration="0.012917" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[[ProcessChainReaction] Starting with 3 initial blocks
+[ProcessChainReaction] Added initial block at (0, 0): THREE
+[ProcessChainReaction] Added initial block at (-1, -1): THREE
+[ProcessChainReaction] Added initial block at (2, 0): THREE
+[ProcessChainReaction] Final destroy list count: 3
+]]></output>
+        </test-case>
+        <test-case id="1070" name="ShouldHandleDuplicatePositionsInBlockList" fullname="EdgeCaseTests.ShouldHandleDuplicatePositionsInBlockList" methodname="ShouldHandleDuplicatePositionsInBlockList" classname="EdgeCaseTests" runstate="Runnable" seed="765996289" result="Passed" start-time="2025-10-12 15:58:35Z" end-time="2025-10-12 15:58:35Z" duration="0.004714" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[[SpecialBlockFactory] 특수 블록 생성:
+  MatchType: FORE_LEFTRIGHT
+  XList (4개): [(0,0), (0,0), (0,0), (0,0)]
+  YList (0개): []
+  All Unique (2개): [(0,0), (0,0)]
+  UserMoveBlock: NULL
+  Position Range: X(0~0), Y(0~0)
+  Expected Middle: (0, 0)
+  Actual SpawnPoint: (0, 0)
+  Color: RED
+]]></output>
+        </test-case>
+        <test-case id="1072" name="ShouldMaintainSyncWhenReplacingBlocksAtSamePosition" fullname="EdgeCaseTests.ShouldMaintainSyncWhenReplacingBlocksAtSamePosition" methodname="ShouldMaintainSyncWhenReplacingBlocksAtSamePosition" classname="EdgeCaseTests" runstate="Runnable" seed="1280850920" result="Passed" start-time="2025-10-12 15:58:35Z" end-time="2025-10-12 15:58:35Z" duration="0.001824" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1071" name="ShouldThrowExceptionWhenRollbackAfterRemoval" fullname="EdgeCaseTests.ShouldThrowExceptionWhenRollbackAfterRemoval" methodname="ShouldThrowExceptionWhenRollbackAfterRemoval" classname="EdgeCaseTests" runstate="Runnable" seed="1122103449" result="Passed" start-time="2025-10-12 15:58:35Z" end-time="2025-10-12 15:58:35Z" duration="0.002018" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[Saving results to: /Users/ihyeonjong/Library/Application Support/DefaultCompany/PuzzleGame/TestResults.xml
+]]></output>
+        </test-case>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

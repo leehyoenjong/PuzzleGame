@@ -19,9 +19,15 @@ public class SpecialBlockFactory
             return null;
         }
 
+        // null 리스트 방어 코드
+        if (xlist == null && ylist == null)
+        {
+            return null;
+        }
+
         // 유효한 블록만 필터링 (위치가 (-1, -1)인 블록 제거)
-        var validxlist = xlist.Where(b => b != null && b.GetPoint() != (-1, -1)).ToList();
-        var validylist = ylist.Where(b => b != null && b.GetPoint() != (-1, -1)).ToList();
+        var validxlist = xlist?.Where(b => b != null && b.GetPoint() != (-1, -1)).ToList() ?? new List<UI_Match_Block>();
+        var validylist = ylist?.Where(b => b != null && b.GetPoint() != (-1, -1)).ToList() ?? new List<UI_Match_Block>();
 
         // 유효한 블록이 없으면 생성 불가
         if (validxlist.Count == 0 && validylist.Count == 0)
@@ -50,9 +56,27 @@ public class SpecialBlockFactory
         EMATCHTYPE matchtype,
         UI_Match_Block usermoveblock)
     {
+        // usermoveblock이 유효하고 실제 매치 리스트에 포함되어 있을 때만 사용
         if (usermoveblock != null)
         {
-            return usermoveblock.GetPoint();
+            var usermovepoint = usermoveblock.GetPoint();
+
+            // (-1, -1)은 무효한 위치이므로 무시
+            if (usermovepoint == (-1, -1))
+            {
+                // 무시하고 중간점 계산으로 fallback
+            }
+            else
+            {
+                bool isinxlist = xlist.Contains(usermoveblock);
+                bool isinylist = ylist.Contains(usermoveblock);
+
+                if (isinxlist || isinylist)
+                {
+                    return usermovepoint;
+                }
+                // 리스트에 없으면 무시하고 중간점 계산으로 fallback
+            }
         }
 
         switch (matchtype)

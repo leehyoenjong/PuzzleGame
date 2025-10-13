@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "mermaid": {
+      "command": "/Users/ihyeonjong/.npm-global/bin/mcp-mermaid",
+      "args": ["--transport", "stdio"]
+    }
+  }
+}
