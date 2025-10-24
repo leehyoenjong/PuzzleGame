@@ -1,0 +1,381 @@
+================================================================================
+PUZZLE GAME - DEPENDENCY MAPPING & ARCHITECTURE ANALYSIS
+================================================================================
+
+CURRENT STATE: PROBLEMATIC COUPLING THROUGH STATIC EVENTS
+================================================================================
+
+Static Event Dependencies (26 events):
+
+UI LAYER (5 events in UI_Match_Block):
+  _point_down_event ──→ BlockControllerManager
+  _point_enter_event ──→ BlockControllerManager  
+  _point_up_event ──→ BlockControllerManager
+  _mathcomplte_event ──→ ScoreManager, GameManager, PoolSystem_Block
+  _move_block_event ──→ MatchFiledManager
+
+MANAGER LAYER (17 events):
+  BlockControllerManager._move_block_event ──→ MatchFiledManager
+  MatchManager._match_complte_block_event ──→ UI_Match_Block
+  MatchManager._match_complte_createblock_event ──→ MatchFiledManager
+  MatchManager._user_move_match_complte ──→ MoveCountManager
+  MatchFiledManager._match_complte_event ──→ MatchManager
+  MatchFiledManager._block_move_event ──→ MatchManager
+  MatchFiledManager._matchsimuration_check_event ──→ MatchManager
+  MatchFiledManager._block_create_event ──→ PoolSystem_Block
+  MatchFiledManager._load_chapter_event ──→ UI_Play, GameConditionManager
+  MatchFiledManager._no_match_block_event ──→ UI_Match_Block
+  MatchFiledManager._replay_complte_event ──→ GameManager
+  GameManager._check_clear_condition_event ──→ GameConditionManager
+  GameManager._check_over_condition_event ──→ GameConditionManager
+  ScoreManager._add_score_event ──→ GameManager, UI_Score
+  MoveCountManager._movecount_event ──→ GameManager, UI_MoveCount
+
+INFRASTRUCTURE (1 event):
+  MoveContoller._complte_move ──→ Check list
+
+
+CIRCULAR DEPENDENCIES DETECTED:
+================================================================================
+
+Cycle 1: MatchManager ↔ MatchFiledManager
+  MatchManager._match_complte_event ← MatchFiledManager
+          ↓ subscribes to
+  _match_complte_event ← MatchManager
+          ↓ publishes
+  _match_complte_createblock_event → MatchFiledManager.CreateMatchBlock()
+          ↓ triggers
+  FiledReSetting() → _match_complte_event?.Invoke() ← back to MatchManager
+
+  Problem: Breaking either class breaks the other
+
+
+Cycle 2: BlockControllerManager → MatchFiledManager (less severe)
+  BlockControllerManager._move_block_event → MatchFiledManager.WaitAndMove()
+                                                     ↓
+  MatchFiledManager._block_controller_check_list ← added by BlockControllerManager
+                                                     ↓
+  Mutable static collection shared - unclear ownership
+
+
+EVENT FLOW FOR SINGLE USER ACTION:
+================================================================================
+
+User drags block:
+  1. UI_Match_Block.Event_Point_Down()
+     ↓ publishes _point_down_event
+  2. BlockControllerManager.PointDown()
+     ↓ stores reference
+  3. User drags to adjacent block
+  4. UI_Match_Block.Event_Point_Enter()
+     ↓ publishes _point_enter_event
+  5. BlockControllerManager.PointEnter()
+     ↓ validates adjacency, publishes
+  6. BlockControllerManager._move_block_event
+     ↓
+  7. MatchFiledManager.WaitAndMove()
+     ↓ waits 0.25s, publishes
+  8. MatchFiledManager._match_complte_event
+     ↓
+  9. MatchManager.UserMoveBlockMatch()
+     ↓ async (waits 0.4s), publishes
+ 10. MatchManager._match_complte_createblock_event
+     ↓
+ 11. MatchFiledManager.CreateMatchBlock()
+     ↓
+ 12. MatchFiledManager._block_create_event
+     ↓
+ 13. PoolSystem_Block.CreateBlock()
+     ↓
+ 14. Blocks animated and drop
+ 15. MatchManager._match_complte_block_event
+     ↓
+ 16. UI_Match_Block.ComplteMatch()
+     ↓ publishes _mathcomplte_event
+ 17. ScoreManager.AddScore()
+     ↓ publishes _add_score_event
+ 18. GameManager.AddScoreData()
+ 19. UI_Score receives _add_score_event
+     ↓
+ 20. MatchManager._user_move_match_complte
+     ↓
+ 21. MoveCountManager.AddMoveCountData()
+     ↓ publishes _movecount_event
+ 22. GameManager.AddMoveCountData()
+ 23. UI_MoveCount receives _movecount_event
+ 24. MatchFiledManager.FiledReSetting()
+     ↓
+ 25. [Loop back to gravity/cascade if matches]
+ 26. GameManager.CheckGameClearAndOver()
+     ↓
+ 27. GameConditionManager checks conditions
+ 28. Game Over popup or continue
+
+Result: 28 event hops, 3+ async waits, 8+ files involved
+
+PROBLEMS:
+- Cannot test step 9 without setting up entire event system
+- Cannot debug flow without tracing 28 event publishes
+- One event signature change breaks multiple files
+- Memory leaks from forgotten unsubscription (bugs at steps 17, 21)
+
+
+DEPENDENCY CHAIN BY FILE:
+================================================================================
+
+GameManager.cs
+  ├─ depends on (static events):
+  │  ├─ ScoreManager._add_score_event
+  │  ├─ MoveCountManager._movecount_event
+  │  ├─ UI_Match_Block._mathcomplte_event
+  │  ├─ MatchFiledManager._replay_complte_event
+  │  └─ BlockControllerManager._block_controller_check_list (mutable static)
+  └─ publishes:
+     ├─ _check_clear_condition_event
+     └─ _check_over_condition_event
+
+MatchManager.cs (402 lines)
+  ├─ depends on:
+  │  ├─ MatchFiledManager._match_complte_event (static)
+  │  ├─ MatchFiledManager._block_move_event (static)
+  │  ├─ MatchFiledManager._match_setting_check_list (mutable static)
+  │  ├─ MatchFiledManager._matchsimuration_check_event (static)
+  │  ├─ MatchDetector (instance in Awake)
+  │  ├─ MatchTypeClassifier (instance in Awake)
+  │  ├─ SpecialBlockFactory (instance in Awake)
+  │  └─ ChainReactionProcessor (instance in Awake)
+  └─ publishes:
+     ├─ _match_complte_createblock_event → MatchFiledManager
+     ├─ _match_complte_block_event → UI_Match_Block
+     └─ _user_move_match_complte → MoveCountManager
+
+MatchFiledManager.cs (401 lines)
+  ├─ depends on:
+  │  ├─ BlockControllerManager._block_controller_check_list (mutable static)
+  │  ├─ MatchManager._match_complte_createblock_event (static)
+  │  ├─ BlockControllerManager._move_block_event (static)
+  │  ├─ UI_Match_Block._move_block_event (static)
+  │  ├─ UI_Match_Block._mathcomplte_event (static)
+  │  ├─ GridManager (instance created in Awake)
+  │  └─ Legacy dictionaries
+  └─ publishes:
+     ├─ _match_complte_event → MatchManager
+     ├─ _block_move_event → MatchManager
+     ├─ _match_setting_check_list (mutable static)
+     ├─ _matchsimuration_check_event → MatchManager
+     ├─ _block_create_event → PoolSystem_Block
+     ├─ _load_chapter_event → UI_Play, GameConditionManager
+     ├─ _no_match_block_event → UI_Match_Block
+     └─ _replay_complte_event → GameManager
+
+BlockControllerManager.cs (60 lines)
+  ├─ depends on (static events):
+  │  ├─ UI_Match_Block._point_down_event
+  │  ├─ UI_Match_Block._point_enter_event
+  │  └─ UI_Match_Block._point_up_event
+  └─ publishes:
+     └─ _move_block_event → MatchFiledManager
+
+UI_Match_Block.cs (182 lines)
+  ├─ depends on (static events):
+  │  ├─ MatchManager._match_complte_block_event
+  │  └─ MatchFiledManager._no_match_block_event
+  ├─ Internal dependencies:
+  │  ├─ MoveController (component)
+  │  ├─ Grid position storage (_x, _y)
+  │  ├─ Block type storage
+  │  └─ Animation state (DOTween)
+  └─ publishes:
+     ├─ _mathcomplte_event → ScoreManager, GameManager, PoolSystem_Block
+     ├─ _move_block_event → MatchFiledManager
+     ├─ _point_down_event → BlockControllerManager
+     ├─ _point_enter_event → BlockControllerManager
+     └─ _point_up_event → BlockControllerManager
+
+ScoreManager.cs
+  ├─ depends on:
+  │  └─ UI_Match_Block._mathcomplte_event (static)
+  └─ publishes:
+     └─ _add_score_event → GameManager, UI_Score
+
+MoveCountManager.cs (BUG HERE)
+  ├─ depends on:
+  │  ├─ MatchManager._user_move_match_complte (static)
+  │  └─ GameConditionManager._overcondition_count (Func delegate)
+  └─ publishes:
+     └─ _movecount_event → GameManager, UI_MoveCount
+  
+  ⚠️  BUG: Line 18 uses += instead of -= (memory leak)
+
+GameConditionManager.cs (BUG HERE)
+  ├─ depends on:
+  │  ├─ GameManager._check_clear_condition_event (static)
+  │  ├─ GameManager._check_over_condition_event (static)
+  │  └─ MatchFiledManager._load_chapter_event (static)
+  └─ publishes:
+     └─ _overcondition_count (Func delegate)
+  
+  ⚠️  BUG: Line 20 uses += instead of -= (memory leak)
+
+PoolSystem_Block.cs
+  ├─ depends on:
+  │  ├─ MatchFiledManager._block_create_event (static)
+  │  └─ UI_Match_Block._mathcomplte_event (static)
+  └─ publishes:
+     └─ (none)
+
+UI_Score.cs
+  ├─ depends on:
+  │  └─ ScoreManager._add_score_event (static)
+  └─ publishes:
+     └─ (none)
+
+UI_MoveCount.cs
+  ├─ depends on:
+  │  ├─ MoveCountManager._movecount_event (static)
+  │  └─ GameConditionManager._overcondition_count (Func)
+  └─ publishes:
+     └─ (none)
+
+MoveController.cs
+  ├─ depends on:
+  │  └─ MatchFiledManager._match_setting_check_list (mutable static)
+  └─ publishes:
+     └─ _complte_move (static event)
+
+
+GOD OBJECT ANALYSIS:
+================================================================================
+
+MatchManager (402 lines) - NEEDS REFACTORING
+  Responsibilities:
+  1. Dependency management (lines 29-48) - 20 lines
+  2. Match completion handling (lines 65-77) - 13 lines
+  3. Grid iteration for matches (lines 94-186) - 93 LINES
+  4. User move matching (lines 191-274) - 84 LINES
+  5. Simulation matching (lines 277-334) - 58 LINES
+  6. Helper methods (lines 336-401) - 66 lines
+
+  Should be split into:
+  - MatchService (orchestrator)
+  - GridMatchDetectionService (lines 94-186 logic)
+  - UserMoveMatchService (lines 191-274 logic)
+  - SimulationMatchService (lines 277-334 logic)
+  - SpecialBlockOrchestrator (special block creation)
+  - ChainReactionOrchestrator (chain processing)
+
+  Duplication:
+  - Lines 138-148 and 237-248: DUPLICATED special block request creation
+  - Lines 151-152 and 251-254: DUPLICATED block collection logic
+
+
+MatchFiledManager (401 lines) - NEEDS REFACTORING
+  Responsibilities:
+  1. Slot creation and grid init (lines 140-187) - 48 lines
+  2. Block creation (lines 190-271) - 82 lines
+  3. Block movement (lines 288-350) - 63 lines
+  4. Gravity/refill orchestration (lines 92-131) - 40 lines
+  5. Event coordination (lines 38-57, 273-286) - 43 lines
+
+  Should be split into:
+  - FieldSetupService (slot creation, grid init)
+  - BlockSpawningService (block creation logic)
+  - BlockMovementService (gravity, cascade, animation)
+  - FieldOrchestratorManager (keeps as is, but smaller)
+
+  Technical Debt:
+  - Lines 15-16: Legacy dictionaries maintained alongside GridManager
+  - Lines 175, 377: Comments say "나중에 제거 예정" (remove later) - NOT REMOVED
+
+
+MEMORY LEAK RISK ASSESSMENT:
+================================================================================
+
+HIGH RISK BUGS:
+✗ GameConditionManager.OnDisable() line 20 - += instead of -=
+  Impact: CheckGameClear subscribed twice, never unsubscribed
+  Severity: CRITICAL
+  
+✗ MoveCountManager.OnDisable() line 18 - += instead of -=
+  Impact: AddMoveCountData subscribed twice, never unsubscribed
+  Severity: CRITICAL
+
+MEDIUM RISK:
+⚠️ Mutable static lists (_match_setting_check_list, _block_controller_check_list)
+  Impact: Manual cleanup required, easy to forget
+  Risk: Test pollution, state leakage between tests
+
+⚠️ Check lists stored in MatchFiledManager but modified by 4+ files
+  Impact: Unclear ownership, synchronization issues
+  Risk: Hard to debug when check fails
+
+
+TESTABILITY MATRIX:
+================================================================================
+
+Class                           Testable?  Reason
+────────────────────────────────────────────────────────────────
+MatchDetector                   ✓ YES      Pure logic, no dependencies
+MatchTypeClassifier             ✓ YES      Pure logic
+SpecialBlockFactory             ✓ YES      Pure logic
+ChainReactionProcessor          ✓ YES      Pure logic
+GridManager                     ✓ YES      Pure data structure
+BlockMover                      ✓ YES      Pure logic
+BlockSwapHandler                ✓ YES      Pure logic
+────────────────────────────────────────────────────────────────
+MatchManager                    ✗ NO       26+ event subscriptions required
+MatchFiledManager               ✗ NO       Complex state, multiple event subscriptions
+BlockControllerManager          ✗ NO       Depends on UI_Match_Block static events
+ScoreManager                    ✗ NO       Depends on UI_Match_Block._mathcomplte_event
+MoveCountManager                ✗ NO       Depends on MatchManager._user_move_match_complte
+GameManager                     ✗ NO       Depends on 3+ managers
+GameConditionManager            ✗ NO       Depends on GameManager events
+────────────────────────────────────────────────────────────────
+UI_Match_Block                  ✗ NO       MonoBehaviour, tight coupling to managers
+PoolSystem_Block                ✗ NO       Depends on UI_Match_Block._mathcomplte_event
+MoveController                  ✗ NO       MonoBehaviour, static event subscriptions
+────────────────────────────────────────────────────────────────
+DataManager                     ✗ NO       Singleton, DontDestroyOnLoad
+
+
+SOLUTION OVERVIEW:
+================================================================================
+
+Replace Current:                With New:
+─────────────────────────────────────────────────────
+26+ Static Events          →    EventBus (centralized)
+MatchManager (402 lines)   →    MatchService + 3 specialized services
+MatchFiledManager (401)    →    FieldOrchestrator + 3 specialized services
+UI_Match_Block (182)       →    BlockData + IBlockView + UI_Match_Block
+No Interfaces              →    IMatchDetector, IGridManager, etc.
+Direct Dependencies        →    Constructor Injection
+Untestable Managers        →    <5 minute test setup time
+
+SEE: REFACTORING_ROADMAP.md for step-by-step implementation
+
+
+IMPACT SUMMARY:
+================================================================================
+
+Current State:
+- 15% test coverage (only pure logic tested)
+- 8+ managers with static event coupling
+- 2 confirmed memory leak bugs
+- 93+ line methods (unmaintainable)
+- Circular dependencies
+- Cannot add features without modifying 3+ files
+
+After Fixes:
+- 70%+ test coverage
+- 0 static events
+- 0 memory leaks
+- <20 line methods
+- 0 circular dependencies  
+- Features isolated to 1-2 files
+
+TIME TO IMPLEMENT:
+- Critical bug fixes: 5 minutes
+- Medium priority fixes: 20 hours
+- Full architectural refactor: 74-108 hours
+
+================================================================================
