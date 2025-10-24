@@ -101,6 +101,24 @@ Benefits:
 - Improves testability from 41% to 60%
 ```
 
+### 1.5 Notion 포트폴리오 문서화
+
+**작업 내용**:
+- [ ] unity-notion-documenter agent 실행
+- [ ] Phase 1 작업 내용을 Notion 문서로 생성
+- [ ] 메인 페이지 "Phase 1: 인터페이스 추출" 섹션에 하위 페이지로 추가
+
+**생성 파일**: `Documentation/Phase1_Interface_Extraction.md`
+
+**포함 내용**:
+- 작업 개요 및 목표
+- 생성된 7개 인터페이스 목록 및 코드
+- 수정된 파일 목록
+- 작성된 테스트 (25개)
+- Before/After 코드 비교
+- 기술적 구현 세부사항
+- 성과 및 배운 점
+
 ---
 
 ## Phase 2: MatchManager 리팩토링 (MatchManager Refactoring)
@@ -221,6 +239,24 @@ Benefits:
 - Can test individual logic without full manager setup
 ```
 
+### 2.6 Notion 포트폴리오 문서화
+
+**작업 내용**:
+- [ ] unity-notion-documenter agent 실행
+- [ ] Phase 2 작업 내용을 Notion 문서로 생성
+- [ ] 메인 페이지 "Phase 2: MatchManager 리팩토링" 섹션에 하위 페이지로 추가
+
+**생성 파일**: `Documentation/Phase2_MatchManager_Refactoring.md`
+
+**포함 내용**:
+- God Object 문제점 분석
+- 의존성 주입 구조 변경 (Before/After)
+- 93줄 메서드 → 3개 메서드 분해 과정
+- 중복 코드 제거 사례
+- 작성된 테스트 (15개)
+- 코드 라인 수 변화 (402 → 280줄)
+- 성과 및 배운 점
+
 ---
 
 ## Phase 3: EventBus 도입 (EventBus Implementation)
@@ -327,6 +363,25 @@ Benefits:
 - Can mock EventBus for testing
 - Event flow visible in one place
 ```
+
+### 3.6 Notion 포트폴리오 문서화
+
+**작업 내용**:
+- [ ] unity-notion-documenter agent 실행
+- [ ] Phase 3 작업 내용을 Notion 문서로 생성
+- [ ] 메인 페이지 "Phase 3: EventBus 도입" 섹션에 하위 페이지로 추가
+
+**생성 파일**: `Documentation/Phase3_EventBus_Implementation.md`
+
+**포함 내용**:
+- Static Event의 문제점 (메모리 누수 위험)
+- EventBus 설계 및 구현
+- 26개 이벤트 타입 정의
+- 6개 Manager 변환 과정
+- Before/After 코드 비교
+- 작성된 테스트 (12개)
+- 메모리 안전성 개선
+- 성과 및 배운 점
 
 ---
 
@@ -466,6 +521,26 @@ Benefits:
 - Easier to add AI/hint system (uses BlockModel only)
 ```
 
+### 4.7 Notion 포트폴리오 문서화
+
+**작업 내용**:
+- [ ] unity-notion-documenter agent 실행
+- [ ] Phase 4 작업 내용을 Notion 문서로 생성
+- [ ] 메인 페이지 "Phase 4: UI-로직 분리" 섹션에 하위 페이지로 추가
+
+**생성 파일**: `Documentation/Phase4_UI_Logic_Separation.md`
+
+**포함 내용**:
+- UI-로직 결합의 문제점
+- MVC 패턴 적용 설계
+- BlockModel 순수 C# 클래스 설계
+- IBlockView 인터페이스 정의
+- UI_Match_Block 리팩토링 (182 → 120줄)
+- GridManager 변경 사항
+- 작성된 테스트 (20개)
+- 병렬 작업 가능성 향상
+- 성과 및 배운 점
+
 ---
 
 ## Phase 5: MatchFiledManager 리팩토링 (MatchFiledManager Refactoring)
@@ -594,6 +669,26 @@ Benefits:
 - Easier to understand and maintain
 ```
 
+### 5.5 Notion 포트폴리오 문서화
+
+**작업 내용**:
+- [ ] unity-notion-documenter agent 실행
+- [ ] Phase 5 작업 내용을 Notion 문서로 생성
+- [ ] 메인 페이지 "Phase 5: MatchFiledManager 리팩토링" 섹션에 하위 페이지로 추가
+
+**생성 파일**: `Documentation/Phase5_MatchFiledManager_Refactoring.md`
+
+**포함 내용**:
+- God Object 문제점 (401줄, 5가지 책임)
+- 3개 서비스 클래스 추출 과정
+  - GridLayoutService (슬롯 배치)
+  - BlockSpawner (블록 생성)
+  - GravityService (중력/리필)
+- MatchFiledManager 슬림화 (401 → 200줄)
+- 작성된 테스트 (30개)
+- 서비스 재사용 가능성
+- 성과 및 배운 점
+
 ---
 
 ## Phase 6: 종합 테스트 및 문서화 (Integration Testing & Documentation)
@@ -663,6 +758,47 @@ Benefits:
 - Easy onboarding for new team members
 - Shows understanding of system as a whole
 ```
+
+### 6.6 Notion 포트폴리오 문서화
+
+**작업 내용**:
+- [ ] unity-notion-documenter agent 실행
+- [ ] Phase 6 작업 내용을 Notion 문서로 생성
+- [ ] 메인 페이지 "Phase 6: 통합 테스트 및 문서화" 섹션에 하위 페이지로 추가
+
+**생성 파일**: `Documentation/Phase6_Integration_Testing_Documentation.md`
+
+**포함 내용**:
+- 통합 테스트 전략
+- 작성된 통합 테스트 (15개)
+  - 전체 게임 플로우 테스트
+  - 연쇄 반응 통합 테스트
+  - 씬 전환 테스트
+- 성능 테스트 (8개)
+  - 대규모 그리드 성능
+  - 메모리 사용량
+  - GC 할당 최소화
+- Architecture.md 작성 내용
+- README 업데이트 사항
+- 프로젝트 최종 메트릭스
+- 전체 리팩토링 회고
+
+### 6.7 프로젝트 완료 최종 문서화
+
+**작업 내용**:
+- [ ] unity-notion-documenter agent 실행
+- [ ] 전체 프로젝트 회고 문서 생성
+- [ ] 메인 페이지 마지막에 "프로젝트 완료 회고" 섹션 추가
+
+**생성 파일**: `Documentation/Project_Retrospective.md`
+
+**포함 내용**:
+- Phase 0-6 전체 요약
+- Before/After 메트릭스 비교표
+- AI 협업 워크플로우 효과 분석
+- 배운 점 및 성장 포인트
+- 향후 개선 방향
+- 포트폴리오 하이라이트
 
 ---
 
