@@ -22,11 +22,15 @@ Gemini CLI를 활용한 코드베이스 아키텍처 분석 후, Unity Match-3 �
 
 **문제 코드** (Line 20):
 ```csharp
+// OnDisable()에서
+
 GameManager._check_clear_condition_event += CheckGameClear;  // ❌ 버그
 ```
 
 **수정 코드**:
 ```csharp
+// OnDisable()에서
+
 GameManager._check_clear_condition_event -= CheckGameClear;  // ✅ 수정
 ```
 
@@ -48,11 +52,15 @@ GameManager._check_clear_condition_event -= CheckGameClear;  // ✅ 수정
 
 **문제 코드** (Line 16):
 ```csharp
+// OnDisable()에서
+
 MatchManager._user_move_match_complte += AddMoveCountData;  // ❌ 버그
 ```
 
 **수정 코드**:
 ```csharp
+// OnDisable()에서
+
 MatchManager._user_move_match_complte -= AddMoveCountData;  // ✅ 수정
 ```
 
@@ -74,14 +82,17 @@ MatchManager._user_move_match_complte -= AddMoveCountData;  // ✅ 수정
 
 Unity에서 이벤트 기반 아키텍처를 사용할 때는 다음과 같은 패턴을 반드시 따라야 합니다:
 
-**OnEnable() - 구독**
+**올바른 패턴**:
 ```csharp
-SomeManager.SomeEvent += EventHandler;  // ✅ += 사용
-```
+void OnEnable()
+{
+    SomeManager.SomeEvent += EventHandler;  // ✅ 구독
+}
 
-**OnDisable() - 구독 해제**
-```csharp
-SomeManager.SomeEvent -= EventHandler;  // ✅ -= 사용
+void OnDisable()
+{
+    SomeManager.SomeEvent -= EventHandler;  // ✅ 구독 해제
+}
 ```
 
 **이 패턴을 따라야 하는 이유**:
@@ -338,12 +349,18 @@ Gemini CLI를 통해 생성된 **110+ 페이지** 분석 문서:
 
 **현재 문제**: 402줄 God Object + 강결합
 ```csharp
-_matchdetector = new MatchDetector();  // ❌ 직접 생성
+void Awake()
+{
+    _matchdetector = new MatchDetector();  // ❌ 직접 생성
+}
 ```
 
 **목표**: 의존성 주입 + 메서드 분해
 ```csharp
-public MatchManager(IMatchDetector detector) { ... }  // ✅ 인터페이스 주입
+public MatchManager(IMatchDetector detector)
+{
+    _matchdetector = detector;  // ✅ 인터페이스 주입
+}
 ```
 
 ---
@@ -359,8 +376,15 @@ public static event Action _user_move_match_complte;  // ❌ Static
 
 **목표**: EventBus + IDisposable 패턴
 ```csharp
-_subscription = _eventBus.Subscribe<Event>(Handler);  // ✅ 자동 정리
-_subscription?.Dispose();  // OnDisable()에서
+void OnEnable()
+{
+    _subscription = _eventBus.Subscribe<Event>(Handler);  // ✅ 구독
+}
+
+void OnDisable()
+{
+    _subscription?.Dispose();  // ✅ 자동 정리
+}
 ```
 
 ---
@@ -371,13 +395,18 @@ _subscription?.Dispose();  // OnDisable()에서
 
 **현재 문제**: UI + 게임 로직 혼재
 ```csharp
-public bool CheckMatch() { ... }  // ❌ UI 클래스에 게임 로직
+public class UI_Match_Block : MonoBehaviour
+{
+    public bool CheckMatch() { ... }  // ❌ UI 클래스에 게임 로직
+}
 ```
 
 **목표**: MVC 패턴 (Model, View, Presenter 분리)
 ```csharp
 public class BlockModel { ... }          // 순수 C# (게임 로직)
+
 public class UI_Match_Block { ... }      // MonoBehaviour (UI만)
+
 public class BlockPresenter { ... }      // 중재자
 ```
 
@@ -394,9 +423,11 @@ public class BlockPresenter { ... }      // 중재자
 
 **목표**: 3개 서비스로 분리 (401 → 200줄)
 ```csharp
-GridManagerService      // 그리드 관리
-BlockPlacementService   // 블록 배치
-GravityService          // 중력/리필
+public class GridManagerService { ... }      // 그리드 관리
+
+public class BlockPlacementService { ... }   // 블록 배치
+
+public class GravityService { ... }          // 중력/리필
 ```
 
 ---
