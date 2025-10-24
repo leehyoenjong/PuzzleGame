@@ -20,29 +20,19 @@ Gemini CLI를 활용한 코드베이스 아키텍처 분석 후, Unity Match-3 �
 
 **위치**: `Assets/01_Script/02_Manager/GameConditionManager.cs:20`
 
-**문제 코드**:
+**문제 코드** (Line 20):
 ```csharp
-void OnDisable()
-{
-    // ❌ 버그: += 연산자를 사용하여 이벤트 구독을 해제하지 않고 추가함
-    GameManager._check_clear_condition_event += CheckGameClear;
-    GameManager._check_over_condition_event -= CheckGameOver;
-    MatchFiledManager._load_chapter_event -= SettingCondition;
-    _overcondition_count -= GetConditionCount;
-}
+GameManager._check_clear_condition_event += CheckGameClear;  // ❌ 버그
 ```
 
 **수정 코드**:
 ```csharp
-void OnDisable()
-{
-    // ✅ 수정: -= 연산자로 올바르게 이벤트 구독 해제
-    GameManager._check_clear_condition_event -= CheckGameClear;
-    GameManager._check_over_condition_event -= CheckGameOver;
-    MatchFiledManager._load_chapter_event -= SettingCondition;
-    _overcondition_count -= GetConditionCount;
-}
+GameManager._check_clear_condition_event -= CheckGameClear;  // ✅ 수정
 ```
+
+**상세 설명**:
+- OnDisable()에서 이벤트 구독을 **해제**해야 하는데, **추가(+=)** 하고 있었음
+- 올바른 연산자는 **제거(-=)** 임
 
 **영향 분석**:
 - 씬이 재로드될 때마다 `CheckGameClear` 이벤트 핸들러가 중복 등록됨
@@ -56,33 +46,19 @@ void OnDisable()
 
 **위치**: `Assets/01_Script/02_Manager/MoveCountManager.cs:16`
 
-**문제 코드**:
+**문제 코드** (Line 16):
 ```csharp
-void OnEnable()
-{
-    MatchManager._user_move_match_complte += AddMoveCountData;
-}
-
-void OnDisable()
-{
-    // ❌ 버그: += 연산자를 사용하여 이벤트 구독을 해제하지 않고 추가함
-    MatchManager._user_move_match_complte += AddMoveCountData;
-}
+MatchManager._user_move_match_complte += AddMoveCountData;  // ❌ 버그
 ```
 
 **수정 코드**:
 ```csharp
-void OnEnable()
-{
-    MatchManager._user_move_match_complte += AddMoveCountData;
-}
-
-void OnDisable()
-{
-    // ✅ 수정: -= 연산자로 올바르게 이벤트 구독 해제
-    MatchManager._user_move_match_complte -= AddMoveCountData;
-}
+MatchManager._user_move_match_complte -= AddMoveCountData;  // ✅ 수정
 ```
+
+**상세 설명**:
+- OnDisable()에서 이벤트 구독을 **해제**해야 하는데, **추가(+=)** 하고 있었음
+- 동일한 실수가 버그 #1과 같은 패턴으로 발생
 
 **영향 분석**:
 - 씬 재로드 시 이동 횟수가 비정상적으로 여러 번 차감됨
@@ -98,19 +74,14 @@ void OnDisable()
 
 Unity에서 이벤트 기반 아키텍처를 사용할 때는 다음과 같은 패턴을 반드시 따라야 합니다:
 
+**OnEnable() - 구독**
 ```csharp
-// ✅ 올바른 패턴
-void OnEnable()
-{
-    // 컴포넌트 활성화 시 이벤트 구독
-    SomeManager.SomeEvent += EventHandler;
-}
+SomeManager.SomeEvent += EventHandler;  // ✅ += 사용
+```
 
-void OnDisable()
-{
-    // 컴포넌트 비활성화 시 이벤트 구독 해제
-    SomeManager.SomeEvent -= EventHandler;
-}
+**OnDisable() - 구독 해제**
+```csharp
+SomeManager.SomeEvent -= EventHandler;  // ✅ -= 사용
 ```
 
 **이 패턴을 따라야 하는 이유**:
@@ -124,12 +95,7 @@ void OnDisable()
 두 버그 모두 **복사-붙여넣기 실수**로 인해 발생했습니다:
 
 ```csharp
-// OnEnable에서 복사한 코드를 OnDisable에 붙여넣을 때
-// += 를 -= 로 변경하지 않음
-void OnDisable()
-{
-    SomeEvent += Handler; // ← 여기를 수정 깜빡함
-}
+SomeEvent += Handler;  // ❌ OnDisable()에서 += 를 -= 로 변경 깜빡함
 ```
 
 이는 전형적인 **타이핑 오류(Typo)**이지만, 컴파일 에러가 발생하지 않아 런타임에만 문제가 드러나는 **사일런트 버그**입니다.
@@ -370,52 +336,14 @@ Gemini CLI를 통해 생성된 **110+ 페이지** 분석 문서:
 **예상 시간**: 8-12시간
 **목표**: 의존성 주입 구조 적용
 
-**현재 상태**:
+**현재 문제**: 402줄 God Object + 강결합
 ```csharp
-public class MatchManager : MonoBehaviour
-{
-    // 직접 참조 (강결합)
-    private MatchFiledManager _matchFiledManager;
-    private BlockControllerManager _blockControllerManager;
-    private ScoreManager _scoreManager;
-
-    // 93줄짜리 거대 메서드
-    public void CheckMatches() { ... }
-}
+_matchdetector = new MatchDetector();  // ❌ 직접 생성
 ```
 
-**목표 상태**:
+**목표**: 의존성 주입 + 메서드 분해
 ```csharp
-public class MatchManager : MonoBehaviour, IMatchManager
-{
-    // 의존성 주입
-    private readonly IGridManager _gridManager;
-    private readonly IBlockFactory _blockFactory;
-    private readonly IScoreCalculator _scoreCalculator;
-
-    // 생성자 주입
-    public MatchManager(
-        IGridManager gridManager,
-        IBlockFactory blockFactory,
-        IScoreCalculator scoreCalculator)
-    {
-        _gridManager = gridManager;
-        _blockFactory = blockFactory;
-        _scoreCalculator = scoreCalculator;
-    }
-
-    // 메서드 분해
-    public void CheckMatches()
-    {
-        var matches = DetectMatches();
-        ProcessMatches(matches);
-        CreateSpecialBlocks(matches);
-    }
-
-    private List<Match> DetectMatches() { ... }
-    private void ProcessMatches(List<Match> matches) { ... }
-    private void CreateSpecialBlocks(List<Match> matches) { ... }
-}
+public MatchManager(IMatchDetector detector) { ... }  // ✅ 인터페이스 주입
 ```
 
 ---
@@ -424,49 +352,15 @@ public class MatchManager : MonoBehaviour, IMatchManager
 **예상 시간**: 8-12시간
 **목표**: Static Event를 EventBus로 전환
 
-**현재 상태** (26개 Static Events):
+**현재 문제**: 26개 Static Event (메모리 누수 위험)
 ```csharp
-public class GameManager : MonoBehaviour
-{
-    public static event Action<int, int> _match_complte_block_event;
-    public static event Action _user_move_match_complte;
-    // ... 24개 더
-}
+public static event Action _user_move_match_complte;  // ❌ Static
 ```
 
-**목표 상태**:
-
-**1) EventBus 클래스**
+**목표**: EventBus + IDisposable 패턴
 ```csharp
-public class EventBus
-{
-    private Dictionary<Type, List<Delegate>> _events;
-
-    public void Subscribe<T>(Action<T> handler) { ... }
-    public void Unsubscribe<T>(Action<T> handler) { ... }
-    public void Publish<T>(T eventData) { ... }
-}
-```
-
-**2) 사용 예시 (GameConditionManager)**
-```csharp
-public class GameConditionManager : MonoBehaviour
-{
-    private EventBus _eventBus;
-    private IDisposable _subscription;
-
-    void OnEnable()
-    {
-        // 자동 정리를 보장하는 구독
-        _subscription = _eventBus.Subscribe<CheckClearConditionEvent>(OnCheckClear);
-    }
-
-    void OnDisable()
-    {
-        // IDisposable 패턴으로 안전한 정리
-        _subscription?.Dispose();
-    }
-}
+_subscription = _eventBus.Subscribe<Event>(Handler);  // ✅ 자동 정리
+_subscription?.Dispose();  // OnDisable()에서
 ```
 
 ---
@@ -475,65 +369,16 @@ public class GameConditionManager : MonoBehaviour
 **예상 시간**: 12-16시간
 **목표**: MVC 패턴 적용
 
-**현재 상태**:
+**현재 문제**: UI + 게임 로직 혼재
 ```csharp
-public class UI_Match_Block : MonoBehaviour
-{
-    // UI + 게임 로직이 섞여 있음
-    public EBLOCKTYPE _blocktype;
-    public St_BlockData _block_data;
-
-    public void OnPointerDown() { ... } // UI
-    public bool CheckMatch() { ... } // 게임 로직 ❌
-    public void CalculateScore() { ... } // 게임 로직 ❌
-}
+public bool CheckMatch() { ... }  // ❌ UI 클래스에 게임 로직
 ```
 
-**목표 상태**:
-
-**1) Model (순수 게임 로직)**
+**목표**: MVC 패턴 (Model, View, Presenter 분리)
 ```csharp
-public class BlockModel
-{
-    public EBLOCKTYPE BlockType { get; }
-    public (int x, int y) GridPosition { get; }
-
-    public bool CanMatchWith(BlockModel other) { ... }
-}
-```
-
-**2) View (UI만 담당)**
-```csharp
-public class UI_Match_Block : MonoBehaviour
-{
-    private BlockModel _model;
-    private BlockPresenter _presenter;
-
-    public void OnPointerDown()
-    {
-        _presenter.OnBlockClicked(_model);
-    }
-
-    public void UpdateVisual(BlockModel model)
-    {
-        // UI 업데이트만
-    }
-}
-```
-
-**3) Presenter (중재자)**
-```csharp
-public class BlockPresenter
-{
-    private BlockModel _model;
-    private UI_Match_Block _view;
-    private IMatchManager _matchManager;
-
-    public void OnBlockClicked(BlockModel model)
-    {
-        _matchManager.ProcessBlockSelection(model);
-    }
-}
+public class BlockModel { ... }          // 순수 C# (게임 로직)
+public class UI_Match_Block { ... }      // MonoBehaviour (UI만)
+public class BlockPresenter { ... }      // 중재자
 ```
 
 ---
@@ -542,56 +387,16 @@ public class BlockPresenter
 **예상 시간**: 8-10시간
 **목표**: God Object 분해
 
-**현재 상태**:
-```csharp
-public class MatchFiledManager : MonoBehaviour // 401줄 ❌
-{
-    // 너무 많은 책임
-    - 그리드 관리
-    - 블록 배치
-    - 중력 처리
-    - 리필 로직
-    - 매치 검증
-    - 스페셜 블록 생성
-}
+**현재 문제**: 401줄 God Object (6가지 책임)
+```
+그리드, 블록배치, 중력, 리필, 매치검증, 스페셜블록
 ```
 
-**목표 상태**: 3개 서비스로 분리
-
-**1) GridManagerService**
+**목표**: 3개 서비스로 분리 (401 → 200줄)
 ```csharp
-public class GridManagerService : IGridManager
-{
-    // 그리드 데이터 관리만
-}
-```
-
-**2) BlockPlacementService**
-```csharp
-public class BlockPlacementService : IBlockPlacement
-{
-    // 블록 배치 로직만
-}
-```
-
-**3) GravityService**
-```csharp
-public class GravityService : IGravityHandler
-{
-    // 중력/리필 로직만
-}
-```
-
-**4) MatchFiledManager (조율자)**
-```csharp
-public class MatchFiledManager : MonoBehaviour
-{
-    private IGridManager _gridManager;
-    private IBlockPlacement _blockPlacement;
-    private IGravityHandler _gravityHandler;
-
-    // 각 서비스에 작업 위임
-}
+GridManagerService      // 그리드 관리
+BlockPlacementService   // 블록 배치
+GravityService          // 중력/리필
 ```
 
 ---
