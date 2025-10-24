@@ -17,7 +17,7 @@ public class GameConditionManager : MonoBehaviour
 
     void OnDisable()
     {
-        GameManager._check_clear_condition_event += CheckGameClear;
+        GameManager._check_clear_condition_event -= CheckGameClear;
         GameManager._check_over_condition_event -= CheckGameOver;
         MatchFiledManager._load_chapter_event -= SettingCondition;
         _overcondition_count -= GetConditionCount;

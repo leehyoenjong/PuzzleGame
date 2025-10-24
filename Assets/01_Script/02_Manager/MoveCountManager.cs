@@ -6,16 +6,20 @@ public class MoveCountManager : MonoBehaviour
     public static event Action<int> _movecount_event;
     int _currentmovecount;
 
-    void Start()
+    void OnEnable()
     {
         MatchManager._user_move_match_complte += AddMoveCountData;
-        int conditioncount = (int)GameConditionManager._overcondition_count?.Invoke();
-        _movecount_event?.Invoke(conditioncount);
     }
 
     void OnDisable()
     {
-        MatchManager._user_move_match_complte += AddMoveCountData;
+        MatchManager._user_move_match_complte -= AddMoveCountData;
+    }
+
+    void Start()
+    {
+        int conditioncount = (int)GameConditionManager._overcondition_count?.Invoke();
+        _movecount_event?.Invoke(conditioncount);
     }
 
     void AddMoveCountData()
