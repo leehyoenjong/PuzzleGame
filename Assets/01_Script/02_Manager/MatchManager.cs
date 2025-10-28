@@ -222,6 +222,28 @@ public class MatchManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 유저 이동으로 인한 매치에서 특수 블록 생성 요청을 처리합니다.
+    /// ProcessMatchRequests와 유사하지만 usermoveblock 파라미터를 받습니다.
+    /// </summary>
+    private void ProcessUserMoveMatchRequests(
+        List<UI_Match_Block> xlist,
+        List<UI_Match_Block> ylist,
+        UI_Match_Block usermoveblock,
+        List<SpecialBlockCreationRequest> creationRequests)
+    {
+        // 타입 분류
+        var matchtype = _matchtypeclassifier.ClassifyMatchType(xlist, ylist);
+
+        // 특수 블록 생성 요청 (유저가 이동한 블록 위치에 생성)
+        var creationrequest = _specialblockfactory.CreateRequest(xlist, ylist, matchtype, usermoveblock);
+
+        if (creationrequest.HasValue)
+        {
+            creationRequests.Add(creationrequest.Value);
+        }
+    }
+
+    /// <summary>
     /// 수집된 블록들을 파괴하고, 연쇄 반응을 처리한 후, 특수 블록을 생성합니다.
     /// </summary>
     private void ExecuteMatchDestruction(
@@ -294,15 +316,11 @@ public class MatchManager : MonoBehaviour
         var creationRequests = new List<SpecialBlockCreationRequest>();
         if (downpointcheck)
         {
-            var matchtype = _matchtypeclassifier.ClassifyMatchType(matchresult.matchblocklist_x, matchresult.matchblocklist_y);
-            var request = _specialblockfactory.CreateRequest(matchresult.matchblocklist_x, matchresult.matchblocklist_y, matchtype, pointenter);
-            if (request.HasValue) creationRequests.Add(request.Value);
+            ProcessUserMoveMatchRequests(matchresult.matchblocklist_x, matchresult.matchblocklist_y, pointenter, creationRequests);
         }
         if (entercheck)
         {
-            var matchtype = _matchtypeclassifier.ClassifyMatchType(matchresult_enter.matchblocklist_x, matchresult_enter.matchblocklist_y);
-            var request = _specialblockfactory.CreateRequest(matchresult_enter.matchblocklist_x, matchresult_enter.matchblocklist_y, matchtype, pointdown);
-            if (request.HasValue) creationRequests.Add(request.Value);
+            ProcessUserMoveMatchRequests(matchresult_enter.matchblocklist_x, matchresult_enter.matchblocklist_y, pointdown, creationRequests);
         }
 
         var blocksToDestroy = new List<UI_Match_Block>();
@@ -311,20 +329,8 @@ public class MatchManager : MonoBehaviour
         blocksToDestroy.AddRange(matchresult_enter.matchblocklist_x);
         blocksToDestroy.AddRange(matchresult_enter.matchblocklist_y);
 
-        var distinctBlocksToDestroy = blocksToDestroy.Distinct().ToList();
-
-        // 기존 특수 블록 효과 처리 (문제점 2 해결)
-        var finalBlocksToDestroy = _chainreactionprocessor.ProcessChainReaction(distinctBlocksToDestroy, matchblockdic);
-
-
-        // --- 2단계: 파괴 ---
-        SetMatchBlock(finalBlocksToDestroy, new List<UI_Match_Block>());
-
-        // --- 3단계: 생성 (문제점 1 해결) ---
-        foreach (var req in creationRequests)
-        {
-            _match_complte_createblock_event?.Invoke(req.Point.x, req.Point.y, req.Type, req.Color);
-        }
+        // --- 2단계 & 3단계: 파괴 및 생성 ---
+        ExecuteMatchDestruction(blocksToDestroy, creationRequests, matchblockdic);
 
         // 최종 처리
         _user_move_match_complte?.Invoke();
