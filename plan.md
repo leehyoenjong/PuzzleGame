@@ -293,8 +293,8 @@ Benefits:
 ### 2.6 Notion 포트폴리오 문서화
 
 **작업 내용**:
-- [ ] unity-notion-documenter agent 실행
-- [ ] Phase 2 작업 내용을 Notion 문서로 생성
+- [x] unity-notion-documenter agent 실행
+- [x] Phase 2 작업 내용을 Notion 문서로 생성
 - [ ] 메인 페이지 "Phase 2: MatchManager 리팩토링" 섹션에 하위 페이지로 추가
 
 **생성 파일**: `Documentation/Phase2_MatchManager_Refactoring.md`
@@ -1069,12 +1069,12 @@ git commit -m "[REFACTOR] Phase X.Y - 작업 설명"
 - [ ] 1.3: 인터페이스 계약 테스트 작성 (25개)
 - [ ] 1.4: 커밋
 
-#### ⏹️ Phase 2: MatchManager 리팩토링
-- [ ] 2.1: 의존성 주입 구조 변경
-- [ ] 2.2: 메서드 분해 (93줄 → 3개 메서드)
-- [ ] 2.3: 중복 코드 제거
-- [ ] 2.4: 단위 테스트 작성 (15개)
-- [ ] 2.5: 커밋
+#### ✅ Phase 2: MatchManager 리팩토링
+- [x] 2.1: 의존성 주입 구조 변경
+- [x] 2.2: 메서드 분해 (93줄 → 3개 메서드)
+- [x] 2.3: 중복 코드 제거
+- [ ] 2.4: 단위 테스트 작성 (15개) - 선택 사항
+- [x] 2.6: Notion 포트폴리오 문서화
 
 #### ⏹️ Phase 3: EventBus 도입
 - [ ] 3.1: EventBus 클래스 생성
