@@ -78,13 +78,43 @@
 **새 파일**: `Assets/01_Script/Tests/InterfaceContractTests.cs`
 
 각 인터페이스 구현이 계약을 준수하는지 검증:
-- [ ] `IMatchDetector` 구현 검증 테스트
-- [ ] `IMatchTypeClassifier` 구현 검증 테스트
-- [ ] `ISpecialBlockFactory` 구현 검증 테스트
-- [ ] `IChainReactionProcessor` 구현 검증 테스트
-- [ ] `IGridManager` 구현 검증 테스트
 
-**예상 테스트 수**: 25개
+#### 1.3.1 IMatchDetector 테스트 (5개)
+- [x] `ShouldDetectHorizontalThreeMatch` - 가로 3매치 감지
+- [x] `ShouldDetectVerticalThreeMatch` - 세로 3매치 감지
+- [x] `ShouldDetectHorizontalFourMatch` - 가로 4매치 감지
+- [x] `ShouldDetectCrossMatch` - 십자형 매치 감지
+- [x] `ShouldReturnEmptyListWhenNoMatch` - 매치 없을 때 빈 리스트 반환
+
+#### 1.3.2 IMatchTypeClassifier 테스트 (5개)
+- [x] `ShouldClassifyThreeMatchAsThree` - 3매치 분류
+- [x] `ShouldClassifyFourMatchAsForeUpDown` - 4매치 상하 분류
+- [x] `ShouldClassifyFourMatchAsForeLeftRight` - 4매치 좌우 분류
+- [x] `ShouldClassifyFiveMatchAsFive` - 5매치 분류
+- [x] `ShouldClassifyCrossMatchAsCrossThree` - 십자형 3매치 분류
+
+#### 1.3.3 ISpecialBlockFactory 테스트 (5개)
+- [x] `ShouldCreateRequestForForeUpDown` - 상하 특수블록 요청 생성
+- [x] `ShouldCreateRequestForForeLeftRight` - 좌우 특수블록 요청 생성
+- [x] `ShouldCreateRequestForFive` - 5매치 특수블록 요청 생성
+- [x] `ShouldCreateRequestForCrossThree` - 십자형 특수블록 요청 생성
+- [x] `ShouldNotCreateRequestForThreeMatch` - 일반 3매치는 요청 없음
+
+#### 1.3.4 IChainReactionProcessor 테스트 (5개)
+- [x] `ShouldProcessForeUpDownChainReaction` - 상하 블록 연쇄반응 처리
+- [x] `ShouldProcessForeLeftRightChainReaction` - 좌우 블록 연쇄반응 처리
+- [x] `ShouldProcessFiveBlockWithColor` - 5매치 블록 색상 연쇄반응
+- [x] `ShouldCombineTwoSpecialBlocks` - 특수블록 2개 조합
+- [x] `ShouldReturnEmptyListForNormalBlocks` - 일반 블록은 빈 리스트 반환
+
+#### 1.3.5 IGridManager 테스트 (5개)
+- [x] `ShouldGetBlockAtPosition` - 위치로 블록 가져오기
+- [x] `ShouldSetBlockAtPosition` - 위치에 블록 설정
+- [x] `ShouldRemoveBlockAtPosition` - 위치의 블록 제거
+- [x] `ShouldReturnNullForInvalidPosition` - 유효하지 않은 위치 null 반환
+- [x] `ShouldCheckIfPositionIsValid` - 위치 유효성 확인
+
+**총 예상 테스트 수**: 25개
 
 ### 1.4 커밋
 
@@ -217,11 +247,32 @@ bool AllBlockMatch(Dictionary<(int, int), UI_Match_Block> matchblockdic, int wid
 
 **새 파일**: `Assets/01_Script/Tests/MatchManagerDependencyTests.cs`
 
-- [ ] Mock 의존성으로 MatchManager 테스트
-- [ ] 각 추출된 메서드 단위 테스트
-- [ ] 통합 테스트 (전체 플로우)
+#### 2.4.1 의존성 주입 테스트 (3개)
+- [ ] `ShouldInitializeWithMockDependencies` - Mock 의존성으로 초기화
+- [ ] `ShouldCallMatchDetectorWhenMatching` - 매치 시 MatchDetector 호출 확인
+- [ ] `ShouldCallSpecialBlockFactoryWhenCreating` - 특수블록 생성 시 Factory 호출 확인
 
-**예상 테스트 수**: 15개
+#### 2.4.2 CollectMatchesFromGrid 테스트 (3개)
+- [ ] `ShouldCollectAllMatchesFromGrid` - 그리드의 모든 매치 수집
+- [ ] `ShouldReturnEmptyListWhenNoMatches` - 매치 없을 때 빈 리스트
+- [ ] `ShouldHandleLargeGridEfficiently` - 대규모 그리드 효율적 처리
+
+#### 2.4.3 ProcessMatchRequests 테스트 (3개)
+- [ ] `ShouldClassifyMatchTypes` - 매치 타입 분류
+- [ ] `ShouldCreateSpecialBlockRequests` - 특수블록 요청 생성
+- [ ] `ShouldHandleMultipleMatchTypes` - 여러 매치 타입 동시 처리
+
+#### 2.4.4 ExecuteMatchDestruction 테스트 (3개)
+- [ ] `ShouldDestroyMatchedBlocks` - 매치된 블록 파괴
+- [ ] `ShouldProcessChainReactions` - 연쇄반응 처리
+- [ ] `ShouldHandleEmptyMatchList` - 빈 매치 리스트 처리
+
+#### 2.4.5 통합 테스트 (3개)
+- [ ] `ShouldCompleteFullMatchFlow` - 전체 매치 플로우 완료
+- [ ] `ShouldHandleUserMoveMatch` - 유저 이동 매치 처리
+- [ ] `ShouldHandleAutoMatch` - 자동 매치 처리
+
+**총 예상 테스트 수**: 15개
 
 ### 2.5 커밋
 
@@ -338,13 +389,27 @@ public struct MatchCompleteEvent : IGameEvent
 
 **새 파일**: `Assets/01_Script/Tests/EventBusTests.cs`
 
-- [ ] 이벤트 발행/구독 기본 동작
-- [ ] 여러 구독자 처리
-- [ ] 구독 해제 동작
-- [ ] 메모리 누수 방지 검증
-- [ ] 순환 이벤트 감지
+#### 3.4.1 기본 발행/구독 테스트 (3개)
+- [ ] `ShouldPublishAndReceiveEvent` - 이벤트 발행 및 수신
+- [ ] `ShouldReceiveCorrectEventData` - 올바른 이벤트 데이터 수신
+- [ ] `ShouldNotReceiveAfterUnsubscribe` - 구독 해제 후 수신 안됨
 
-**예상 테스트 수**: 12개
+#### 3.4.2 다중 구독자 테스트 (3개)
+- [ ] `ShouldNotifyAllSubscribers` - 모든 구독자에게 알림
+- [ ] `ShouldMaintainSubscriberOrder` - 구독자 순서 유지
+- [ ] `ShouldHandleSubscriberException` - 구독자 예외 처리
+
+#### 3.4.3 메모리 관리 테스트 (3개)
+- [ ] `ShouldNotLeakMemoryAfterUnsubscribe` - 구독 해제 후 메모리 누수 없음
+- [ ] `ShouldClearAllSubscriptions` - Clear() 시 모든 구독 제거
+- [ ] `ShouldHandleNullReferences` - null 참조 처리
+
+#### 3.4.4 고급 시나리오 테스트 (3개)
+- [ ] `ShouldHandleMultipleEventTypes` - 여러 이벤트 타입 동시 처리
+- [ ] `ShouldPreventInfiniteLoop` - 무한 루프 방지
+- [ ] `ShouldHandleConcurrentSubscriptions` - 동시 구독 처리
+
+**총 예상 테스트 수**: 12개
 
 ### 3.5 커밋
 
@@ -497,12 +562,35 @@ Dictionary<string, IBlockView> _views; // ID → View 매핑
 
 **새 파일**: `Assets/01_Script/Tests/BlockModelTests.cs`
 
-- [ ] BlockModel 생성 및 위치 업데이트
-- [ ] BlockModel 파괴 마킹
-- [ ] UI 없이 GridManager 테스트 (BlockModel만 사용)
-- [ ] Mock IBlockView로 UI 로직 테스트
+#### 4.5.1 BlockModel 기본 테스트 (5개)
+- [ ] `ShouldCreateBlockModelWithPosition` - 위치와 함께 생성
+- [ ] `ShouldUpdatePosition` - 위치 업데이트
+- [ ] `ShouldMarkForDestruction` - 파괴 마킹
+- [ ] `ShouldHaveUniqueId` - 고유 ID 생성
+- [ ] `ShouldStoreMatchTypeAndColor` - 매치 타입과 색상 저장
 
-**예상 테스트 수**: 20개
+#### 4.5.2 GridManager Pure Logic 테스트 (5개)
+- [ ] `ShouldManageBlockModelsWithoutUI` - UI 없이 블록 관리
+- [ ] `ShouldAddBlockModelToGrid` - 그리드에 블록 추가
+- [ ] `ShouldRemoveBlockModelFromGrid` - 그리드에서 블록 제거
+- [ ] `ShouldSwapBlockModels` - 블록 모델 교환
+- [ ] `ShouldDetectMatchesWithBlockModels` - 블록 모델로 매치 감지
+
+#### 4.5.3 IBlockView 인터페이스 테스트 (5개)
+- [ ] `ShouldImplementIBlockView` - IBlockView 구현 확인
+- [ ] `ShouldUpdateVisualFromModel` - 모델로부터 비주얼 업데이트
+- [ ] `ShouldPlaySwapAnimation` - 교환 애니메이션 재생
+- [ ] `ShouldPlayDestructionAnimation` - 파괴 애니메이션 재생
+- [ ] `ShouldSetInteractable` - 상호작용 가능 여부 설정
+
+#### 4.5.4 View-Model 통합 테스트 (5개)
+- [ ] `ShouldSyncViewWithModel` - View와 Model 동기화
+- [ ] `ShouldUpdateViewWhenModelChanges` - Model 변경 시 View 업데이트
+- [ ] `ShouldHandleModelDestruction` - Model 파괴 처리
+- [ ] `ShouldMapModelIdToView` - Model ID로 View 매핑
+- [ ] `ShouldCleanupViewReferences` - View 참조 정리
+
+**총 예상 테스트 수**: 20개
 
 ### 4.6 커밋
 
@@ -646,11 +734,43 @@ public class MatchFiledManager : MonoBehaviour
 
 **새 파일**: `Assets/01_Script/Tests/GridServicesTests.cs`
 
-- [ ] GridLayoutService 테스트 (10개)
-- [ ] BlockSpawner 테스트 (8개)
-- [ ] GravityService 테스트 (12개)
+#### 5.3.1 GridLayoutService 테스트 (10개)
+- [ ] `ShouldCalculateSlotPosition` - 슬롯 위치 계산
+- [ ] `ShouldCalculateCenterPosition` - 중앙 위치 계산
+- [ ] `ShouldHandleOddWidthGrid` - 홀수 너비 그리드 처리
+- [ ] `ShouldHandleEvenWidthGrid` - 짝수 너비 그리드 처리
+- [ ] `ShouldCalculateTopSlots` - 최상단 슬롯 계산
+- [ ] `ShouldHandleIrregularMap` - 불규칙 맵 처리
+- [ ] `ShouldCalculateSlotSize` - 슬롯 크기 계산
+- [ ] `ShouldPositionAtGridBoundary` - 그리드 경계 위치
+- [ ] `ShouldHandleLargeGrid` - 대규모 그리드 처리
+- [ ] `ShouldCachePositionCalculations` - 위치 계산 캐싱
 
-**예상 테스트 수**: 30개
+#### 5.3.2 BlockSpawner 테스트 (10개)
+- [ ] `ShouldSpawnBlockForEmptySlot` - 빈 슬롯에 블록 생성
+- [ ] `ShouldSpawnMultipleBlocks` - 여러 블록 동시 생성
+- [ ] `ShouldSpawnRandomColorBlock` - 랜덤 색상 블록 생성
+- [ ] `ShouldSpawnSpecialBlock` - 특수 블록 생성
+- [ ] `ShouldNotSpawnOnOccupiedSlot` - 점유된 슬롯에 생성 안함
+- [ ] `ShouldSpawnAtTopPosition` - 최상단 위치에 생성
+- [ ] `ShouldTrackSpawnedBlocks` - 생성된 블록 추적
+- [ ] `ShouldRespectColorDistribution` - 색상 분포 준수
+- [ ] `ShouldHandleSpawnFailure` - 생성 실패 처리
+- [ ] `ShouldPoolBlockInstances` - 블록 인스턴스 풀링
+
+#### 5.3.3 GravityService 테스트 (10개)
+- [ ] `ShouldApplyGravityToFloatingBlock` - 떠있는 블록에 중력 적용
+- [ ] `ShouldMoveBlockDown` - 블록 아래로 이동
+- [ ] `ShouldStopAtOccupiedSlot` - 점유된 슬롯에서 정지
+- [ ] `ShouldHandleMultipleColumns` - 여러 열 동시 처리
+- [ ] `ShouldProcessBottomToTop` - 아래에서 위로 처리
+- [ ] `ShouldDetectNeedRefill` - 리필 필요 감지
+- [ ] `ShouldCalculateFallDistance` - 낙하 거리 계산
+- [ ] `ShouldHandleIrregularShape` - 불규칙 형태 처리
+- [ ] `ShouldOptimizeGravityPass` - 중력 적용 최적화
+- [ ] `ShouldTriggerSettleEvent` - 안착 이벤트 트리거
+
+**총 예상 테스트 수**: 30개
 
 ### 5.4 커밋
 
@@ -702,24 +822,51 @@ Benefits:
 **새 파일**: `Assets/01_Script/Tests/SystemIntegrationTests.cs`
 
 실제 게임 시나리오 테스트:
-- [ ] 사용자 이동 → 매치 → 중력 → 재매치 전체 플로우
-- [ ] 특수 블록 생성 → 연쇄 반응 전체 플로우
-- [ ] 게임 클리어 조건 달성 플로우
-- [ ] 게임 오버 조건 도달 플로우
-- [ ] 5단계 캐스케이드 매치
 
-**예상 테스트 수**: 15개
+#### 6.1.1 기본 게임 플로우 테스트 (5개)
+- [ ] `ShouldCompleteUserMoveToMatchFlow` - 사용자 이동 → 매치 플로우
+- [ ] `ShouldApplyGravityAfterMatch` - 매치 후 중력 적용
+- [ ] `ShouldDetectCascadeMatches` - 연쇄 매치 감지
+- [ ] `ShouldRefillEmptySlots` - 빈 슬롯 리필
+- [ ] `ShouldStabilizeGrid` - 그리드 안정화
+
+#### 6.1.2 특수 블록 시나리오 테스트 (5개)
+- [ ] `ShouldCreateSpecialBlockOnFourMatch` - 4매치 시 특수블록 생성
+- [ ] `ShouldCreateSpecialBlockOnFiveMatch` - 5매치 시 특수블록 생성
+- [ ] `ShouldTriggerChainReaction` - 연쇄반응 트리거
+- [ ] `ShouldCombineSpecialBlocks` - 특수블록 조합
+- [ ] `ShouldClearLargeArea` - 넓은 영역 제거
+
+#### 6.1.3 게임 조건 테스트 (5개)
+- [ ] `ShouldDetectClearCondition` - 클리어 조건 감지
+- [ ] `ShouldDetectGameOverCondition` - 게임오버 조건 감지
+- [ ] `ShouldTrackScore` - 점수 추적
+- [ ] `ShouldTrackMoveCount` - 이동 횟수 추적
+- [ ] `ShouldCompleteFullGameSession` - 전체 게임 세션 완료
+
+**총 예상 테스트 수**: 15개
 
 ### 6.2 성능 테스트
 
 **새 파일**: `Assets/01_Script/Tests/PerformanceTests.cs`
 
-- [ ] 100x100 그리드 전체 스캔 (< 1초)
-- [ ] 1000번 연속 매치 시뮬레이션 (< 1초)
-- [ ] 메모리 누수 테스트 (1000번 반복 후 메모리 증가 < 10%)
-- [ ] GC 할당 최소화 (주요 루프에서 0 할당)
+#### 6.2.1 스캔 성능 테스트 (2개)
+- [ ] `ShouldScanLargeGridUnder1Second` - 100x100 그리드 스캔 (< 1초)
+- [ ] `ShouldScanIrregularGridEfficiently` - 불규칙 그리드 효율적 스캔
 
-**예상 테스트 수**: 8개
+#### 6.2.2 매치 시뮬레이션 테스트 (2개)
+- [ ] `ShouldSimulate1000MatchesUnder1Second` - 1000번 매치 시뮬레이션 (< 1초)
+- [ ] `ShouldHandleCascadeMatchesEfficiently` - 연쇄 매치 효율적 처리
+
+#### 6.2.3 메모리 관리 테스트 (2개)
+- [ ] `ShouldNotLeakMemoryAfter1000Iterations` - 1000번 반복 후 메모리 누수 없음 (< 10%)
+- [ ] `ShouldReleaseResourcesProperly` - 리소스 적절히 해제
+
+#### 6.2.4 GC 할당 테스트 (2개)
+- [ ] `ShouldMinimizeGCInMatchLoop` - 매치 루프에서 GC 최소화
+- [ ] `ShouldReuseCollections` - 컬렉션 재사용
+
+**총 예상 테스트 수**: 8개
 
 ### 6.3 아키텍처 문서 작성
 
@@ -916,9 +1063,9 @@ git commit -m "[REFACTOR] Phase X.Y - 작업 설명"
 - [x] 전체 테스트 통과 확인 (217/217)
 - [x] 커밋 완료
 
-#### ⏹️ Phase 1: 인터페이스 추출
-- [ ] 1.1: IServices.cs 생성
-- [ ] 1.2: 기존 클래스 인터페이스 구현 (7개)
+#### 🔄 Phase 1: 인터페이스 추출
+- [x] 1.1: IServices.cs 생성
+- [x] 1.2: 기존 클래스 인터페이스 구현 (7개)
 - [ ] 1.3: 인터페이스 계약 테스트 작성 (25개)
 - [ ] 1.4: 커밋
 

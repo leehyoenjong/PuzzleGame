@@ -13,7 +13,7 @@ public struct CrossMatchResult
 /// 그리드에서 매치 패턴을 감지하는 클래스
 /// 수평, 수직, 십자 매치를 감지합니다.
 /// </summary>
-public class MatchDetector
+public class MatchDetector : IMatchDetector
 {
     public List<(int, int)> DetectHorizontalMatch(Dictionary<(int, int), UI_Match_Block> grid, (int x, int y) startposition)
     {

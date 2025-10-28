@@ -5,7 +5,7 @@ using System.Linq;
 /// 게임 그리드의 상태를 관리하는 클래스
 /// 블록 추가, 제거, 조회 및 맵 검증을 담당합니다.
 /// </summary>
-public class GridManager
+public class GridManager : IGridManager
 {
     public int Width { get; private set; }
     public int Height { get; private set; }

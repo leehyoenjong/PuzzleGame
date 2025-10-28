@@ -5,7 +5,7 @@ using System.Linq;
 /// 특수 블록의 연쇄 반응을 처리하는 클래스
 /// FORE, FIVE, CROSS 타입 블록의 효과와 연쇄 반응을 담당합니다.
 /// </summary>
-public class ChainReactionProcessor
+public class ChainReactionProcessor : IChainReactionProcessor
 {
     public List<UI_Match_Block> ProcessEffect(UI_Match_Block specialblock, Dictionary<(int, int), UI_Match_Block> matchblockdic, EBLOCKCOLORTYPE? targetcolor = null)
     {

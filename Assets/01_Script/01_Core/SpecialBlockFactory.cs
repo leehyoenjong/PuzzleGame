@@ -6,7 +6,7 @@ using UnityEngine;
 /// 매치 타입에 따라 특수 블록 생성 요청을 만드는 팩토리 클래스
 /// 4-매치, 5-매치, 십자 패턴에 대한 특수 블록 생성을 담당합니다.
 /// </summary>
-public class SpecialBlockFactory
+public class SpecialBlockFactory : ISpecialBlockFactory
 {
     public SpecialBlockCreationRequest? CreateRequest(
         List<UI_Match_Block> xlist,
