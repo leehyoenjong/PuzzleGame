@@ -25,26 +25,50 @@ public class MatchManager : MonoBehaviour
         (1, 0)//우
     };
 
-    // Match detection logic
-    private MatchDetector _matchdetector;
-    private MatchTypeClassifier _matchtypeclassifier;
-    private SpecialBlockFactory _specialblockfactory;
-    private ChainReactionProcessor _chainreactionprocessor;
-    private MoveMatchValidator _movematchvalidator;
-    private BlockSwapHandler _blockswaphandler;
+    // Match detection logic - 인터페이스 타입으로 의존성 역전
+    private IMatchDetector _matchdetector;
+    private IMatchTypeClassifier _matchtypeclassifier;
+    private ISpecialBlockFactory _specialblockfactory;
+    private IChainReactionProcessor _chainreactionprocessor;
+    private IMoveMatchValidator _movematchvalidator;
+    private IBlockSwapHandler _blockswaphandler;
 
     //매치 진행중인지 체크
     bool _ismatching;
     bool CheckMatching() => _ismatching;
 
+    /// <summary>
+    /// 의존성 주입을 통한 초기화
+    /// 테스트 시 Mock 객체를 주입하거나, 프로덕션에서 실제 구현체를 주입할 수 있습니다.
+    /// </summary>
+    public void Initialize(
+        IMatchDetector matchdetector,
+        IMatchTypeClassifier matchtypeclassifier,
+        ISpecialBlockFactory specialblockfactory,
+        IChainReactionProcessor chainreactionprocessor,
+        IMoveMatchValidator movematchvalidator,
+        IBlockSwapHandler blockswaphandler)
+    {
+        _matchdetector = matchdetector;
+        _matchtypeclassifier = matchtypeclassifier;
+        _specialblockfactory = specialblockfactory;
+        _chainreactionprocessor = chainreactionprocessor;
+        _movematchvalidator = movematchvalidator;
+        _blockswaphandler = blockswaphandler;
+    }
+
     void Awake()
     {
-        _matchdetector = new MatchDetector();
-        _matchtypeclassifier = new MatchTypeClassifier();
-        _specialblockfactory = new SpecialBlockFactory();
-        _chainreactionprocessor = new ChainReactionProcessor();
-        _movematchvalidator = new MoveMatchValidator(_matchdetector);
-        _blockswaphandler = new BlockSwapHandler();
+        // 기본 구현체 주입 (프로덕션)
+        var matchdetector = new MatchDetector();
+        Initialize(
+            matchdetector,
+            new MatchTypeClassifier(),
+            new SpecialBlockFactory(),
+            new ChainReactionProcessor(),
+            new MoveMatchValidator(matchdetector),
+            new BlockSwapHandler()
+        );
     }
 
     void OnEnable()
