@@ -240,8 +240,8 @@ bool AllBlockMatch(Dictionary<(int, int), UI_Match_Block> matchblockdic, int wid
 - `UserMoveBlockMatch()` Lines 236-247
 
 **공통 로직 추출**:
-- [ ] `CreateSpecialBlockRequests()` 메서드 추출
-- [ ] `ProcessDestructionWithChainReaction()` 메서드 추출
+- [x] `ProcessUserMoveMatchRequests()` 메서드 추출 - 유저 이동 매치 요청 처리
+- [x] UserMoveBlockMatch()에서 `ExecuteMatchDestruction()` 재사용
 
 ### 2.4 테스트 작성
 
