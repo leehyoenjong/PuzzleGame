@@ -199,18 +199,18 @@ void Awake()
 ```
 
 **작업 내용**:
-- [ ] `Initialize()` 메서드 추가
-- [ ] Awake()에서 기본 의존성 주입
-- [ ] 필드를 인터페이스 타입으로 변경
+- [x] `Initialize()` 메서드 추가
+- [x] Awake()에서 기본 의존성 주입
+- [x] 필드를 인터페이스 타입으로 변경
 
 ### 2.2 메서드 분해 (Extract Method)
 
 **현재 문제**: `AllBlockMatch()` 메서드가 93줄, 3가지 책임
 
 **분해 대상**:
-1. [ ] `CollectMatchesFromGrid()` - 그리드 순회 및 매치 수집
-2. [ ] `ProcessMatchRequests()` - 매치 타입 분류 및 특수 블록 요청
-3. [ ] `ExecuteMatchDestruction()` - 블록 파괴 및 연쇄 반응
+1. [x] `CollectMatchesFromGrid()` - 그리드 순회 및 매치 수집
+2. [x] `ProcessMatchRequests()` - 매치 타입 분류 및 특수 블록 요청
+3. [x] `ExecuteMatchDestruction()` - 블록 파괴 및 연쇄 반응
 
 **Before** (93줄):
 ```csharp
